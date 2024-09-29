@@ -1,3 +1,5 @@
+import { type IchiranResponse } from "./ichiran";
+
 export type MokuroResponse = {
   version: string;
   img_width: number;
@@ -11,4 +13,5 @@ export type Block = {
   font_size: number;
   lines_coords: [number, number][][];
   lines: string[];
+  segmentation: IchiranResponse;
 };

@@ -47,3 +47,6 @@ yarn-error.log*
 
 # public image files
 public/images
+
+# docker postgres files
+docker

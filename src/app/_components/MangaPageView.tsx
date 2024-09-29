@@ -2,15 +2,8 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { useMediaQuery } from "react-responsive";
-import resolveConfig from "tailwindcss/resolveConfig";
-import tailwindConfig from "../../../tailwind.config";
-
 import type { MokuroResponse } from "@/types/mokuro";
 import { Button } from "./ui/button";
-import dynamic from "next/dynamic";
-
-const twConfig = resolveConfig(tailwindConfig);
 
 const Language = {
   enUS: "en-US",
@@ -38,9 +31,6 @@ const MangaPageView = ({
   const oppositeLanguage = getOppositeLanguage(language);
 
   const imgPath = `/images/${mangaSlug}/${language}/volume-${volumeNumber}/${pageNumber.padStart(3, "0")}.JPG`;
-  const isDesktop = useMediaQuery({
-    query: `(min-width: ${twConfig.theme.screens.md})`,
-  });
 
   const toggleLanguage = () => setLanguage(getOppositeLanguage);
 
@@ -51,15 +41,13 @@ const MangaPageView = ({
       const top = `${(box[1] * 100) / ocr.img_height}%`;
       const width = `${((box[2] - box[0]) * 100) / ocr.img_width}%`;
       const height = `${((box[3] - box[1]) * 100) / ocr.img_height}%`;
-      // But fontsize calculation depends on isDesktop
-      const fontFullHeight = `${(font_size * 100) / ocr.img_height}vh`;
-      const fontFullWidth = `${(font_size * 100) / ocr.img_width}vw`;
-      const fontSize = isDesktop ? fontFullHeight : fontFullWidth;
+      const fontSize = `${(font_size * 100) / ocr.img_height}vh`;
 
       return (
         <div
           key={`block-${blockIdx}`}
           className="group absolute opacity-0 hover:opacity-100"
+          // You can't use dynamic styles with Tailwind. So need to use inline style prop instead.
           style={{
             left,
             top,
@@ -100,10 +88,4 @@ const MangaPageView = ({
   );
 };
 
-/**
- * Since I use inline styles, we don't want NextJs to do any SSR for layouts.
- * I turned it off entirely for now, until I find a better solution (styled components?)
- */
-export default dynamic(() => Promise.resolve(MangaPageView), {
-  ssr: false,
-});
+export default MangaPageView;

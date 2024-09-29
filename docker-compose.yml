@@ -1,0 +1,14 @@
+services:
+  pg:
+    container_name: ichiran-postgres
+    image: ghcr.io/louismollick/ichiran-postgres:latest
+    shm_size: "1gb"
+    environment:
+      POSTGRES_PASSWORD: "password"
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    volumes:
+      - ${PWD}/docker/pgdata:/var/lib/postgresql/data
+
+  ichiran:
+    container_name: ichiran
+    image: ghcr.io/louismollick/ichiran:latest
