@@ -1,4 +1,4 @@
-import MangaPageView from "@/app/_components/MangaPageView";
+import MangaPageView from "@/app/_components/mangaPageView";
 import safelyReadOcrFile from "@/lib/ocr/safelyReadOcrFile";
 
 export default async function MangaPage({
