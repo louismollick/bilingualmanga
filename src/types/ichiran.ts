@@ -17,6 +17,7 @@ export type WordAlternatives =
     }
   | WordReading;
 
+// Raw format we receive fromt Ichiran
 export type WordReading = {
   reading?: string;
   text?: string;
@@ -28,6 +29,14 @@ export type WordReading = {
   compound?: string[];
   components?: WordReading[];
   suffix?: string;
+};
+
+// Format after processing for render
+export type WordReadingForRender = WordReading & {
+  text: string;
+  id: string; // Used for uniquely referencing a word in speech bubble
+  romaji?: string; // I move this from the Word object to WordReading object, so it's easier to access.
+  isPunctuation: boolean; // Generated on render using regex
 };
 
 export type Gloss = {

@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import type { MokuroResponse } from "@/types/mokuro";
-import type { IchiranResponse, WordReading } from "@/types/ichiran";
+import type { IchiranResponse, WordReadingForRender } from "@/types/ichiran";
 import { Button } from "./ui/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "./ui/drawer";
 import { cn } from "@/lib/ui/utils";
@@ -20,6 +20,10 @@ const getOppositeLanguage = (currLanguage: LanguageType) => {
   else return Language.enUS;
 };
 
+// Regular expression to match only special characters (excluding letters in any language or numbers)
+const containsOnlySpecialCharacters = (input: string) =>
+  /^[^\p{L}\p{N}]+$/u.test(input);
+
 const MangaPageView = ({
   mangaSlug,
   volumeNumber,
@@ -32,11 +36,10 @@ const MangaPageView = ({
   ocr: MokuroResponse;
 }) => {
   const [language, setLanguage] = useState<LanguageType>(Language.jpJP);
-  const [segmentedSpeechBubble, setSegmentedSpeechBubble] =
+  const [selectedSegmentation, setSelectedSegmentation] =
     useState<IchiranResponse | null>(null);
-  const [selectedWord, setSelectedWord] = useState<
-    [number, number, WordReading] | null
-  >(null);
+  const [selectedWordId, setSelectedWordId] = useState<string | null>(null);
+  const wordRefs = useRef<Map<string, HTMLElement>>(new Map());
 
   const oppositeLanguage = getOppositeLanguage(language);
 
@@ -44,8 +47,46 @@ const MangaPageView = ({
 
   const toggleLanguage = () => setLanguage(getOppositeLanguage);
 
-  const [selectedChainIdx, selectedWordIdx, selectedReading] =
-    selectedWord ?? [];
+  const scrollWordReadingIntoView = (wordId: string) =>
+    wordRefs.current.get(wordId)?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+      inline: "nearest",
+    });
+
+  const wordReadings = useMemo(
+    () =>
+      selectedSegmentation
+        ? selectedSegmentation.flatMap((wordChain, wordChainIdx) => {
+            // Edge case when dictionary info available
+            if (typeof wordChain === "string")
+              return {
+                id: `chain-${wordChainIdx}`,
+                reading: wordChain,
+                text: wordChain,
+                isPunctuation: containsOnlySpecialCharacters(wordChain),
+              };
+
+            const [[words]] = wordChain;
+            return words.map((word, wordIdx) => {
+              const [romaji, wordAlternatives] = word;
+
+              const wordReading =
+                "alternative" in wordAlternatives
+                  ? wordAlternatives.alternative[0]! // just take the first one
+                  : wordAlternatives;
+
+              return {
+                ...wordReading,
+                id: `chain-${wordChainIdx}-word-${wordIdx}`,
+                romaji,
+                isPunctuation: false,
+              } as WordReadingForRender;
+            });
+          })
+        : null,
+    [selectedSegmentation],
+  );
 
   const speechBubbles = ocr.blocks.map(
     ({ box, font_size, vertical, lines, segmentation }, blockIdx) => {
@@ -69,7 +110,7 @@ const MangaPageView = ({
             fontSize,
             writingMode: vertical ? "vertical-rl" : "horizontal-tb",
           }}
-          onClick={() => setSegmentedSpeechBubble(segmentation)}
+          onClick={() => setSelectedSegmentation(segmentation)}
         >
           {lines.map((line, lineIdx) => (
             <p
@@ -99,63 +140,57 @@ const MangaPageView = ({
       </div>
       <Button onClick={toggleLanguage}>{oppositeLanguage}</Button>
       <Drawer
-        open={Boolean(segmentedSpeechBubble)}
+        open={Boolean(selectedSegmentation)}
         onClose={() => {
-          setSegmentedSpeechBubble(null);
-          setSelectedWord(null);
+          setSelectedSegmentation(null);
+          setSelectedWordId(null);
         }}
       >
         <DrawerContent>
-          <DrawerHeader>
+          <DrawerHeader className="pb-0">
             <DrawerTitle>
-              <p className="my-4 w-full select-text p-3 text-left text-4xl font-light text-muted-foreground lg:text-6xl">
-                {Boolean(segmentedSpeechBubble?.length) &&
-                  segmentedSpeechBubble?.map((wordChain, chainIdx) => {
-                    // No dictionary info available
-                    if (typeof wordChain === "string") {
-                      if (wordChain === "\n") {
-                        return <br key={`chain-${chainIdx}`} />;
-                      }
-                      return <span key={`chain-${chainIdx}`}>{wordChain}</span>;
-                    }
-
-                    const [[words]] = wordChain;
-                    return words.map((word, wordIdx) => {
-                      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                      const [_, wordAlternatives] = word;
-
-                      const wordReading =
-                        "alternative" in wordAlternatives
-                          ? wordAlternatives.alternative[0]! // just take the first one
-                          : wordAlternatives;
-
-                      return (
-                        <span
-                          key={`chain-${chainIdx}-word-${wordIdx}`}
-                          className={cn(
-                            "hover:text-accent-foreground hover:underline",
-                            selectedChainIdx === chainIdx &&
-                              selectedWordIdx === wordIdx &&
-                              "text-accent-foreground underline",
-                          )}
-                          onClick={() =>
-                            setSelectedWord([chainIdx, wordIdx, wordReading])
-                          }
-                        >
-                          {wordReading.text}
-                        </span>
-                      );
-                    });
-                  })}
+              <p className="w-full select-text p-3 text-left text-4xl font-light text-muted-foreground lg:text-6xl">
+                {wordReadings?.map(({ id, isPunctuation, text }) => (
+                  <span
+                    key={`word-${id}`}
+                    className={cn(
+                      !isPunctuation &&
+                        "hover:text-accent-foreground hover:underline",
+                      selectedWordId === id &&
+                        "text-accent-foreground underline",
+                    )}
+                    onClick={() => {
+                      scrollWordReadingIntoView(id);
+                      setSelectedWordId(id);
+                    }}
+                  >
+                    {text}
+                  </span>
+                ))}
               </p>
             </DrawerTitle>
           </DrawerHeader>
-          <div className="h-[60vh] select-text p-4 pb-0">
-            {Boolean(selectedWord) ? (
-              <WordReadingContent wordReading={selectedReading!} />
-            ) : (
-              "Select a word to view its definition."
-            )}
+          <div className="grid h-[60vh] grid-cols-1 gap-4 overflow-y-scroll p-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            {wordReadings
+              ?.filter(({ isPunctuation }) => !isPunctuation)
+              .map((wordReading, idx) => (
+                <WordReadingContent
+                  key={`wordreading-${idx}`}
+                  wordReading={wordReading}
+                  onClick={() => {
+                    scrollWordReadingIntoView(wordReading.id);
+                    setSelectedWordId(wordReading.id);
+                  }}
+                  ref={(node) => {
+                    if (node) wordRefs.current.set(wordReading.id, node);
+                    else wordRefs.current.delete(wordReading.id);
+                  }}
+                  className={cn(
+                    selectedWordId === wordReading.id &&
+                      "border-accent-foreground",
+                  )}
+                />
+              ))}
           </div>
         </DrawerContent>
       </Drawer>
