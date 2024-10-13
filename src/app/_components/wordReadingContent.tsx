@@ -6,7 +6,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "./ui/card";
+} from "@/app/_components/ui/card";
 import { cn } from "@/lib/ui/utils";
 
 type Props = {

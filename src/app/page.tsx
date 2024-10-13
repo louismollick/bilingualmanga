@@ -1,53 +1,43 @@
 import Link from "next/link";
-
-import { LatestPost } from "@/app/_components/post";
-import { api, HydrateClient } from "@/trpc/server";
+import Image from "next/image";
+import { promises as fs } from "fs";
 
 export default async function Home() {
-  const hello = await api.post.hello({ text: "from tRPC" });
+  const dirPath = `${process.cwd()}/public/images`;
 
-  void api.post.getLatest.prefetch();
+  const mangaNames = (await fs.readdir(dirPath)).filter(
+    (mangaName) => mangaName !== ".DS_Store",
+  );
+
+  if (!mangaNames.length) {
+    return <div>No manga found!</div>;
+  }
 
   return (
-    <HydrateClient>
-      <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
-        <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
-          <h1 className="text-5xl font-extrabold tracking-tight sm:text-[5rem]">
-            Create <span className="text-[hsl(280,100%,70%)]">T3</span> App
-          </h1>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-8">
-            <Link
-              className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 hover:bg-white/20"
-              href="https://create.t3.gg/en/usage/first-steps"
-              target="_blank"
-            >
-              <h3 className="text-2xl font-bold">First Steps →</h3>
-              <div className="text-lg">
-                Just the basics - Everything you need to know to set up your
-                database and authentication.
-              </div>
-            </Link>
-            <Link
-              className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 hover:bg-white/20"
-              href="https://create.t3.gg/en/introduction"
-              target="_blank"
-            >
-              <h3 className="text-2xl font-bold">Documentation →</h3>
-              <div className="text-lg">
-                Learn more about Create T3 App, the libraries it uses, and how
-                to deploy it.
-              </div>
-            </Link>
-          </div>
-          <div className="flex flex-col items-center gap-2">
-            <p className="text-2xl text-white">
-              {hello ? hello.greeting : "Loading tRPC query..."}
-            </p>
-          </div>
+    <main className="container mx-auto mt-24 flex h-screen flex-col gap-6 bg-background text-accent-foreground">
+      <h1 className="text-5xl font-extrabold tracking-tight sm:text-[5rem]">
+        Bilingual <span className="text-[hsl(280,100%,70%)]">Manga</span>
+      </h1>
+      <div className="grid h-full grid-cols-1 gap-4 overflow-y-scroll p-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        {mangaNames.map((mangaName, idx) => (
+          <Link
+            key={idx}
+            href={`/${mangaName}`}
+            className="flex flex-col gap-3"
+          >
+            <div className="relative h-80">
+              <Image
+                alt={`${mangaName} cover`}
+                src="/images/dorohedoro/jp-JP/volume-2/003.JPG"
+                fill
+                className="object-contain object-left"
+              />
+            </div>
 
-          <LatestPost />
-        </div>
-      </main>
-    </HydrateClient>
+            {mangaName}
+          </Link>
+        ))}
+      </div>
+    </main>
   );
 }
