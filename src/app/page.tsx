@@ -1,15 +1,15 @@
 import Link from "next/link";
 import Image from "next/image";
-import { promises as fs } from "fs";
+import safelyReadDirectory from "@/lib/ocr/safelyReadDirectory";
 
 export default async function Home() {
   const dirPath = `${process.cwd()}/public/images`;
 
-  const mangaNames = (await fs.readdir(dirPath)).filter(
+  const mangaNames = (await safelyReadDirectory(dirPath))?.filter(
     (mangaName) => mangaName !== ".DS_Store",
   );
 
-  if (!mangaNames.length) {
+  if (!mangaNames?.length) {
     return <div>No manga found!</div>;
   }
 

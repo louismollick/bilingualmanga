@@ -174,7 +174,7 @@ const MangaPageView = ({
       </div>
 
       <nav className="flex w-full items-center justify-around gap-3 md:absolute md:left-0 md:top-0 md:h-full md:w-24 md:flex-col md:justify-start md:border-r">
-        <Link href="/">
+        <Link href="/" prefetch={false}>
           <Button variant="ghost" size="icon" className="h-20 w-20 md:mt-3">
             <House />
             <span className="sr-only">Home</span>

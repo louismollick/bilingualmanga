@@ -1,4 +1,4 @@
-import { promises as fs } from "fs";
+import safelyReadDirectory from "@/lib/ocr/safelyReadDirectory";
 import Link from "next/link";
 
 export default async function VolumeList({
@@ -8,11 +8,11 @@ export default async function VolumeList({
 }) {
   const dirPath = `${process.cwd()}/public/images/${mangaSlug}/jp-JP/_ocr`;
 
-  const volumes = (await fs.readdir(dirPath))
-    .filter((mangaName) => mangaName !== ".DS_Store")
+  const volumes = (await safelyReadDirectory(dirPath))
+    ?.filter((mangaName) => mangaName !== ".DS_Store")
     .map((volumeName) => volumeName.replace("volume-", ""));
 
-  if (!volumes.length) {
+  if (!volumes?.length) {
     return <div>No volumes found!</div>;
   }
 
