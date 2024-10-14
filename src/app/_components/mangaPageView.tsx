@@ -19,7 +19,6 @@ import { Tabs, TabsList, TabsTrigger } from "@/app/_components/ui/tabs";
 import { cn } from "@/lib/ui/utils";
 import WordReadingContent from "@/app/_components/wordReadingContent";
 import useKeyPress from "@/app/_hooks/useKeyPress";
-import { PrefetchKind } from "next/dist/client/components/router-reducer/router-reducer-types";
 
 const Language = {
   enUS: "en-US",
@@ -61,7 +60,10 @@ const MangaPageView = ({
       ? goToNextPage()
       : goToPreviousPage();
 
-  useEffect(() => router.prefetch(nextPagePath), [nextPagePath, router]);
+  useEffect(() => {
+    console.log(`PREFETCHING PAGE ${nextPagePath}`);
+    router.prefetch(nextPagePath);
+  }, [nextPagePath, router]);
 
   const [language, setLanguage] = useState<LanguageType>(Language.jpJP);
   const [selectedSegmentation, setSelectedSegmentation] =
@@ -70,6 +72,8 @@ const MangaPageView = ({
   const wordRefs = useRef<Map<string, HTMLElement>>(new Map());
 
   const imgPath = `/images/${mangaSlug}/${language}/volume-${volumeNumber}/${pageNumber.padStart(3, "0")}.JPG`;
+
+  console.log(`LOADING PAGE WITH IMAGEPATH ${imgPath}`);
 
   const scrollWordReadingIntoView = (wordId: string) =>
     wordRefs.current.get(wordId)?.scrollIntoView({
