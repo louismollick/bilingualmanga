@@ -2,6 +2,7 @@ import { type IchiranResponse } from "./ichiran";
 
 export type MokuroResponse = {
   version: string;
+  lastPage?: boolean;
   img_width: number;
   img_height: number;
   blocks: Block[];

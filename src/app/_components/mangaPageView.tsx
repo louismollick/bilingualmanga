@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
+import { preload } from "react-dom";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -19,7 +20,6 @@ import { Tabs, TabsList, TabsTrigger } from "@/app/_components/ui/tabs";
 import { cn } from "@/lib/ui/utils";
 import WordReadingContent from "@/app/_components/wordReadingContent";
 import useKeyPress from "@/app/_hooks/useKeyPress";
-import { PrefetchKind } from "next/dist/client/components/router-reducer/router-reducer-types";
 
 const Language = {
   enUS: "en-US",
@@ -61,7 +61,8 @@ const MangaPageView = ({
       ? goToNextPage()
       : goToPreviousPage();
 
-  useEffect(() => router.prefetch(nextPagePath), [nextPagePath, router]);
+  const nextImg = `/_next/image?url=${encodeURIComponent(`/images/${mangaSlug}/jp-JP/volume-${volumeNumber}/${(pageNumberParsed + 1).toString().padStart(3, "0")}.JPG`)}&w=1920&q=75`;
+  preload(nextImg, { as: "image", fetchPriority: "high" });
 
   const [language, setLanguage] = useState<LanguageType>(Language.jpJP);
   const [selectedSegmentation, setSelectedSegmentation] =
@@ -170,13 +171,13 @@ const MangaPageView = ({
             width={ocr.img_width}
             height={ocr.img_height}
             priority
-            className="h-auto min-w-full select-none md:min-h-screen md:w-auto"
+            className="h-auto min-w-full select-none md:h-screen md:w-auto"
           />
         </div>
       </div>
 
       <nav className="mt-2 flex w-full items-center justify-around gap-3 text-xs md:absolute md:left-0 md:top-0 md:h-full md:w-24 md:flex-col md:justify-start md:border-r">
-        <Link href="/" prefetch={false}>
+        <Link href="/">
           <Button
             variant="ghost"
             size="icon"
@@ -228,7 +229,6 @@ const MangaPageView = ({
           </TabsList>
         </Tabs>
       </nav>
-
       <Drawer
         open={Boolean(selectedSegmentation)}
         onClose={() => {
