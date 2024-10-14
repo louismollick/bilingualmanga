@@ -19,6 +19,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/app/_components/ui/tabs";
 import { cn } from "@/lib/ui/utils";
 import WordReadingContent from "@/app/_components/wordReadingContent";
 import useKeyPress from "@/app/_hooks/useKeyPress";
+import { PrefetchKind } from "next/dist/client/components/router-reducer/router-reducer-types";
 
 const Language = {
   enUS: "en-US",
@@ -167,40 +168,52 @@ const MangaPageView = ({
             width={ocr.img_width}
             height={ocr.img_height}
             priority
-            onLoad={() => router.prefetch(nextPagePath)}
+            onLoad={() =>
+              router.prefetch(nextPagePath, { kind: PrefetchKind.FULL })
+            }
             className="h-auto min-w-full select-none md:min-h-screen md:w-auto"
           />
         </div>
       </div>
 
-      <nav className="flex w-full items-center justify-around gap-3 md:absolute md:left-0 md:top-0 md:h-full md:w-24 md:flex-col md:justify-start md:border-r">
+      <nav className="mt-2 flex w-full items-center justify-around gap-3 text-xs md:absolute md:left-0 md:top-0 md:h-full md:w-24 md:flex-col md:justify-start md:border-r">
         <Link href="/" prefetch={false}>
-          <Button variant="ghost" size="icon" className="h-20 w-20 md:mt-3">
-            <House />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 md:mt-3 md:h-20 md:w-20"
+          >
+            <House className="h-5 w-5" />
             <span className="sr-only">Home</span>
           </Button>
         </Link>
 
         <Link href={`/${mangaSlug}`}>
-          <Button variant="ghost" size="icon" className="h-20 w-20">
-            <ArrowBigLeft />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 md:h-20 md:w-20"
+          >
+            <ArrowBigLeft className="h-5 w-5" />
             <span className="sr-only">Back to manga</span>
           </Button>
         </Link>
 
-        <div className="flex h-20 w-20 items-center justify-center">
-          <p>Volume {volumeNumber}</p>
+        <div className="flex flex-col items-center justify-center md:h-20 md:w-20">
+          <p>Volume</p>
+          <p>{volumeNumber}</p>
         </div>
 
-        <div className="flex h-20 w-20 items-center justify-center">
-          <p>Page {pageNumber}</p>
+        <div className="flex flex-col items-center justify-center md:h-20 md:w-20">
+          <p>Page</p>
+          <p>{pageNumber}</p>
         </div>
 
         <Tabs
           onValueChange={(value) => setLanguage(value as LanguageType)}
           defaultValue={Language.jpJP}
         >
-          <TabsList className="w-20">
+          <TabsList className="md:w-20">
             <TabsTrigger
               value={Language.jpJP}
               className="text-zinc-600 dark:text-zinc-200"
