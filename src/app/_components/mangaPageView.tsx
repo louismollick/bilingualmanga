@@ -19,7 +19,6 @@ import { Tabs, TabsList, TabsTrigger } from "@/app/_components/ui/tabs";
 import { cn } from "@/lib/ui/utils";
 import WordReadingContent from "@/app/_components/wordReadingContent";
 import useKeyPress from "@/app/_hooks/useKeyPress";
-import { PrefetchKind } from "next/dist/client/components/router-reducer/router-reducer-types";
 
 const Language = {
   enUS: "en-US",
@@ -36,11 +35,13 @@ const MangaPageView = ({
   volumeNumber,
   pageNumber,
   ocr,
+  image,
 }: {
   mangaSlug: string;
   volumeNumber: string;
   pageNumber: string;
   ocr: MokuroResponse;
+  image: React.ReactNode;
 }) => {
   const router = useRouter();
   // const volumeNumberParsed = parseInt(volumeNumber, 10);
@@ -68,8 +69,6 @@ const MangaPageView = ({
     useState<IchiranResponse | null>(null);
   const [selectedWordId, setSelectedWordId] = useState<string | null>(null);
   const wordRefs = useRef<Map<string, HTMLElement>>(new Map());
-
-  const imgPath = `/images/${mangaSlug}/${language}/volume-${volumeNumber}/${pageNumber.padStart(3, "0")}.JPG`;
 
   const scrollWordReadingIntoView = (wordId: string) =>
     wordRefs.current.get(wordId)?.scrollIntoView({
@@ -164,19 +163,12 @@ const MangaPageView = ({
       >
         <div className="relative h-fit w-fit bg-slate-100">
           {language === Language.jpJP && speechBubbles}
-          <Image
-            src={imgPath}
-            alt={`${mangaSlug} Volume ${volumeNumber} Page number ${pageNumber} Language ${language}`}
-            width={ocr.img_width}
-            height={ocr.img_height}
-            priority
-            className="h-auto min-w-full select-none md:min-h-screen md:w-auto"
-          />
+          {image}
         </div>
       </div>
 
       <nav className="mt-2 flex w-full items-center justify-around gap-3 text-xs md:absolute md:left-0 md:top-0 md:h-full md:w-24 md:flex-col md:justify-start md:border-r">
-        <Link href="/" prefetch={false}>
+        <Link href="/">
           <Button
             variant="ghost"
             size="icon"
