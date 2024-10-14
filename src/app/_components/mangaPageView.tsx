@@ -60,6 +60,11 @@ const MangaPageView = ({
       ? goToNextPage()
       : goToPreviousPage();
 
+  useEffect(() => {
+    console.log(`PREFETCHING PAGE ${nextPagePath}`);
+    router.prefetch(nextPagePath);
+  }, [nextPagePath, router]);
+
   const [language, setLanguage] = useState<LanguageType>(Language.jpJP);
   const [selectedSegmentation, setSelectedSegmentation] =
     useState<IchiranResponse | null>(null);
@@ -67,15 +72,6 @@ const MangaPageView = ({
   const wordRefs = useRef<Map<string, HTMLElement>>(new Map());
 
   const imgPath = `/images/${mangaSlug}/${language}/volume-${volumeNumber}/${pageNumber.padStart(3, "0")}.JPG`;
-
-  const nextPage = pageNumberParsed + 1;
-  const nextImgPath = `/images/${mangaSlug}/${language}/volume-${volumeNumber}/${nextPage.toString().padStart(3, "0")}.JPG`;
-
-  useEffect(() => {
-    console.log(`PREFETCHING NEXT IMAGE ALSO ${nextPagePath}`);
-    router.prefetch(nextImgPath);
-    router.prefetch(nextPagePath);
-  }, [nextImgPath, nextPagePath, router]);
 
   console.log(`LOADING PAGE WITH IMAGEPATH ${imgPath}`);
 
