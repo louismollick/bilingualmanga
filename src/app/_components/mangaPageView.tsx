@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -60,6 +60,8 @@ const MangaPageView = ({
     event.nativeEvent.clientX >= window.innerWidth / 2
       ? goToNextPage()
       : goToPreviousPage();
+
+  useEffect(() => router.prefetch(nextPagePath), [nextPagePath, router]);
 
   const [language, setLanguage] = useState<LanguageType>(Language.jpJP);
   const [selectedSegmentation, setSelectedSegmentation] =
@@ -168,9 +170,6 @@ const MangaPageView = ({
             width={ocr.img_width}
             height={ocr.img_height}
             priority
-            onLoad={() =>
-              router.prefetch(nextPagePath, { kind: PrefetchKind.FULL })
-            }
             className="h-auto min-w-full select-none md:min-h-screen md:w-auto"
           />
         </div>
