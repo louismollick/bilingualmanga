@@ -46,9 +46,9 @@ const MangaPageView = ({
   // const volumeNumberParsed = parseInt(volumeNumber, 10);
   const pageNumberParsed = parseInt(pageNumber, 10);
 
-  const nextPagePath = `/${mangaSlug}/${volumeNumber}/${pageNumberParsed + 1}`;
+  const nextPagePath = `/read/${mangaSlug}/${volumeNumber}/${pageNumberParsed + 1}`;
   const goToNextPage = () => router.push(nextPagePath);
-  const previousPagePath = `/${mangaSlug}/${volumeNumber}/${pageNumberParsed - 1}`;
+  const previousPagePath = `/read/${mangaSlug}/${volumeNumber}/${pageNumberParsed - 1}`;
   const goToPreviousPage = () => router.push(previousPagePath);
 
   useKeyPress({
@@ -188,7 +188,7 @@ const MangaPageView = ({
           </Button>
         </Link>
 
-        <Link href={`/${mangaSlug}`}>
+        <Link href={`/read/${mangaSlug}`}>
           <Button
             variant="ghost"
             size="icon"

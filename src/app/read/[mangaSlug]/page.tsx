@@ -25,7 +25,7 @@ export default async function VolumeList({
         {volumes.map((volumeNum, idx) => (
           <Link
             key={idx}
-            href={`/${mangaSlug}/${volumeNum}/0`}
+            href={`/read/${mangaSlug}/${volumeNum}/0`}
             className="flex flex-col gap-3"
           >
             Volume {volumeNum}

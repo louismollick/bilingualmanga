@@ -32,7 +32,7 @@ RUN \
   fi
 
 # We only keep the public/images folder during the build process
-RUN rm -rf /app/public/images
+RUN rm -rf /app/public/images /app/.next/standalone/public/images
 
 ##### RUNNER
 
