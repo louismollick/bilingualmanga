@@ -34,6 +34,15 @@ RUN \
 # We only keep the public/images folder during the build process
 RUN rm -rf /app/public/images /app/.next/standalone/public/images
 
+RUN ls -al /app/public
+
+RUN ls -al /app/.next/standalone
+
+RUN ls -al /app/.next/standalone/public
+
+RUN ls -al /app/.next/static
+
+
 ##### RUNNER
 
 FROM --platform=linux/amd64 gcr.io/distroless/nodejs20-debian12 AS runner

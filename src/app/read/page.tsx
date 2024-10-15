@@ -22,7 +22,7 @@ export default async function Home() {
         {mangaNames.map((mangaName, idx) => (
           <Link
             key={idx}
-            href={`/${mangaName}`}
+            href={`/read/${mangaName}`}
             className="flex flex-col gap-3"
           >
             <div className="relative h-80">

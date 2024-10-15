@@ -16,5 +16,5 @@ jobs:
           script: |
             cd ~/bilingualmanga && git pull && git status
             echo "${{ secrets.GH_PAT }}" | docker login --username louismollick --password-stdin ghcr.io
-            docker build . --tag ghcr.io/louismollick/bilingualmanga:latest
+            docker build . --no-cache --tag ghcr.io/louismollick/bilingualmanga:latest
             docker push ghcr.io/louismollick/bilingualmanga:latest
