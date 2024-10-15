@@ -31,6 +31,9 @@ RUN \
   else echo "Lockfile not found." && exit 1; \
   fi
 
+# We only keep the public/images folder during the build process
+RUN rm -rf /app/public/images
+
 ##### RUNNER
 
 FROM --platform=linux/amd64 gcr.io/distroless/nodejs20-debian12 AS runner

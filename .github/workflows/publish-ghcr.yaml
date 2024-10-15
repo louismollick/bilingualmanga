@@ -6,11 +6,15 @@ jobs:
   build_and_publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Deploy using ssh
+        uses: appleboy/ssh-action@master
         with:
-          submodules: "recursive"
-      - name: Build and push the image
-        run: |
-          echo "${{ secrets.GH_PAT }}" | docker login --username louismollick --password-stdin ghcr.io
-          docker build . --tag ghcr.io/louismollick/bilingualmanga:latest
-          docker push ghcr.io/louismollick/bilingualmanga:latest
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.PRIVATE_KEY }}
+          port: 22
+          script: |
+            cd ~/bilingualmanga && git pull && git status
+            echo "${{ secrets.GH_PAT }}" | docker login --username louismollick --password-stdin ghcr.io
+            docker build . --tag ghcr.io/louismollick/bilingualmanga:latest
+            docker push ghcr.io/louismollick/bilingualmanga:latest
