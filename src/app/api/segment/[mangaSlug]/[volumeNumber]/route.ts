@@ -3,10 +3,13 @@ import { NextResponse, type NextRequest } from "next/server";
 import fs from "fs";
 import childProcess from "child_process";
 
-import safelyReadOcrFile from "@/lib/ocr/safelyReadOcrFile";
-import safelyParseJson from "@/lib/ocr/safelyParseJson";
 import type { IchiranResponse } from "@/types/ichiran";
-import safelyWriteOcrFile from "@/lib/ocr/safelyWriteOcrFile";
+import type { MokuroResponse } from "@/types/mokuro";
+import {
+  safelyWriteFile,
+  safelyParseJson,
+  safelyReadFile,
+} from "@/lib/ocr/utils";
 
 const command = "docker";
 const args = ["exec", "-t", "ichiran", "ichiran-cli"];
@@ -37,7 +40,7 @@ export async function GET(
     fileNames.map(async (fileName) => {
       const filePath = `${dirPath}/${fileName}`;
       console.info(`Reading ${filePath}...`);
-      const ocr = await safelyReadOcrFile(filePath);
+      const ocr = await safelyReadFile<MokuroResponse>(filePath);
 
       if (!ocr) {
         console.error(
@@ -88,10 +91,7 @@ export async function GET(
         }),
       );
 
-      const writeSuccess = await safelyWriteOcrFile(
-        filePath,
-        JSON.stringify(ocr),
-      );
+      const writeSuccess = await safelyWriteFile(filePath, JSON.stringify(ocr));
       if (!writeSuccess) {
         console.error(
           `Error while writing to OCR file ${filePath}.\nOutput was: ${JSON.stringify(ocr)}`,

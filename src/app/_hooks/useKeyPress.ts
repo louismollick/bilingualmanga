@@ -1,6 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect } from "react";
 
-const useKeyPress = (handlers: Record<string, () => void> = {}, dependencies = []) => {
+const useKeyPress = (
+  handlers: Record<string, () => void> = {},
+  dependencies = [],
+) => {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (!event.repeat) {

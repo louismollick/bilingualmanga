@@ -1,14 +1,12 @@
 import MangaPageView from "@/app/_components/mangaPageView";
-import safelyReadOcrFile from "@/lib/ocr/safelyReadOcrFile";
+import { getPageOcr } from "@/lib/ocr/utils";
 
 export default async function MangaPage({
   params: { mangaSlug, volumeNumber, pageNumber },
 }: {
   params: { mangaSlug: string; volumeNumber: string; pageNumber: string };
 }) {
-  const ocr = await safelyReadOcrFile(
-    `${process.cwd()}/public/images/${mangaSlug}/jp-JP/_ocr/volume-${volumeNumber}/${pageNumber.padStart(3, "0")}.json`,
-  );
+  const ocr = await getPageOcr(mangaSlug, volumeNumber, pageNumber);
   if (!ocr) return <div>Page not found.</div>;
 
   return (

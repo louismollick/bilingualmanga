@@ -9,6 +9,7 @@ import { House, ArrowBigLeft } from "lucide-react";
 
 import type { MokuroResponse } from "@/types/mokuro";
 import type { IchiranResponse, WordReadingForRender } from "@/types/ichiran";
+import { Language, type LanguageType } from "@/types/language";
 import { Button } from "@/app/_components/ui/button";
 import {
   Drawer,
@@ -17,15 +18,10 @@ import {
   DrawerTitle,
 } from "@/app/_components/ui/drawer";
 import { Tabs, TabsList, TabsTrigger } from "@/app/_components/ui/tabs";
-import { cn } from "@/lib/ui/utils";
 import WordReadingContent from "@/app/_components/wordReadingContent";
 import useKeyPress from "@/app/_hooks/useKeyPress";
-
-const Language = {
-  enUS: "en-US",
-  jpJP: "jp-JP",
-} as const;
-type LanguageType = (typeof Language)[keyof typeof Language];
+import { cn } from "@/lib/ui/utils";
+import { getPageImagePath, getPageNextJsImagePath } from "@/lib/filepath/utils";
 
 // Regular expression to match only special characters (excluding letters in any language or numbers)
 const containsOnlySpecialCharacters = (input: string) =>
@@ -43,10 +39,10 @@ const MangaPageView = ({
   ocr: MokuroResponse;
 }) => {
   const router = useRouter();
-  // const volumeNumberParsed = parseInt(volumeNumber, 10);
   const pageNumberParsed = parseInt(pageNumber, 10);
+  const nextPageNumStr = `${pageNumberParsed + 1}`;
 
-  const nextPagePath = `/read/${mangaSlug}/${volumeNumber}/${pageNumberParsed + 1}`;
+  const nextPagePath = `/read/${mangaSlug}/${volumeNumber}/${nextPageNumStr}`;
   const goToNextPage = () => router.push(nextPagePath);
   const previousPagePath = `/read/${mangaSlug}/${volumeNumber}/${pageNumberParsed - 1}`;
   const goToPreviousPage = () => router.push(previousPagePath);
@@ -61,8 +57,12 @@ const MangaPageView = ({
       ? goToNextPage()
       : goToPreviousPage();
 
-  const nextImg = `/_next/image?url=${encodeURIComponent(`/images/${mangaSlug}/jp-JP/volume-${volumeNumber}/${(pageNumberParsed + 1).toString().padStart(3, "0")}.JPG`)}&w=1920&q=75`;
-  preload(nextImg, { as: "image", fetchPriority: "high" });
+  const nextImgPath = getPageNextJsImagePath(
+    mangaSlug,
+    volumeNumber,
+    nextPageNumStr,
+  );
+  preload(nextImgPath, { as: "image", fetchPriority: "high" });
 
   const [language, setLanguage] = useState<LanguageType>(Language.jpJP);
   const [selectedSegmentation, setSelectedSegmentation] =
@@ -70,7 +70,12 @@ const MangaPageView = ({
   const [selectedWordId, setSelectedWordId] = useState<string | null>(null);
   const wordRefs = useRef<Map<string, HTMLElement>>(new Map());
 
-  const imgPath = `/images/${mangaSlug}/${language}/volume-${volumeNumber}/${pageNumber.padStart(3, "0")}.JPG`;
+  const imgPath = getPageImagePath(
+    mangaSlug,
+    volumeNumber,
+    pageNumber,
+    language,
+  );
 
   const scrollWordReadingIntoView = (wordId: string) =>
     wordRefs.current.get(wordId)?.scrollIntoView({
