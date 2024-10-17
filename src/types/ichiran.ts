@@ -13,8 +13,8 @@ export type Word = [
 
 export type WordAlternatives =
   | {
-      alternative: WordReading[];
-    }
+    alternative: WordReading[];
+  }
   | WordReading;
 
 // Raw format we receive fromt Ichiran
@@ -49,6 +49,7 @@ export type Conj = {
   prop: Prop[];
   reading: string;
   gloss?: Gloss[];
+  via?: Conj[];
   readok: boolean;
 };
 

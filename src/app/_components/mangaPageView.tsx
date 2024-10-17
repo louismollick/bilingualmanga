@@ -18,7 +18,7 @@ import {
   DrawerTitle,
 } from "@/app/_components/ui/drawer";
 import { Tabs, TabsList, TabsTrigger } from "@/app/_components/ui/tabs";
-import WordReadingContent from "@/app/_components/wordReadingContent";
+import WordReadingCard from "@/app/_components/wordReadingCard";
 import useKeyPress from "@/app/_hooks/useKeyPress";
 import { cn } from "@/lib/ui/utils";
 import { getPageImagePath, getPageNextJsImagePath } from "@/lib/filepath/utils";
@@ -269,7 +269,7 @@ const MangaPageView = ({
             {wordReadings
               ?.filter(({ isPunctuation }) => !isPunctuation)
               .map((wordReading, idx) => (
-                <WordReadingContent
+                <WordReadingCard
                   key={`wordreading-${idx}`}
                   wordReading={wordReading}
                   onClick={() => {
