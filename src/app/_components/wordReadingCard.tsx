@@ -43,15 +43,15 @@ function WordConj({ conj }: { conj?: Conj[] }) {
           {!!conj.prop?.length &&
             conj.prop.map((prop, propIdx) => (
               <p key={propIdx} className="mb-1">
-                <span className="mr-1 text-green-600">[{prop.pos}]</span>
-                <span>{prop.type}</span>
+                <span className="mr-1 text-green-600">{`[${prop.pos}]`}</span>
+                <span className="text-muted-foreground">{prop.type}</span>
               </p>
             ))}
           {conj.reading && <p className="font-bold">{conj.reading}</p>}
           <WordGloss gloss={conj.gloss} className="ml-3 mt-1" />
           {conj.via?.length && (
             <div className="ml-4">
-              via
+              <span className="text-muted-foreground">{"via"}</span>
               <WordConj conj={conj.via} />
             </div>
           )}
@@ -73,7 +73,8 @@ function WordReadingContent({
       {showReading && <p className="py-1 font-bold">{wordReading.reading}</p>}
       {wordReading.compound?.length && (
         <p className="my-1">
-          Compound word: {wordReading.compound.join(" + ")}
+          <span className="text-muted-foreground">{"Compound word: "}</span>
+          {wordReading.compound.join(" + ")}
         </p>
       )}
       {wordReading.components?.length && (
@@ -84,7 +85,10 @@ function WordReadingContent({
         </ol>
       )}
       {wordReading.suffix && (
-        <p className="ml-3 mt-1">Suffix: {wordReading.suffix}</p>
+        <p className="ml-3 mt-1">
+          <span className="text-muted-foreground">{"Suffix: "}</span>
+          {wordReading.suffix}
+        </p>
       )}
       <WordConj conj={wordReading.conj} />
       <WordGloss gloss={wordReading.gloss} />
