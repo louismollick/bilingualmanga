@@ -52,10 +52,11 @@ const MangaPageView = ({
     ArrowRight: goToNextPage,
   });
 
-  const handleImageClick = (event: React.MouseEvent<HTMLDivElement>) =>
-    event.nativeEvent.clientX >= window.innerWidth / 2
-      ? goToNextPage()
-      : goToPreviousPage();
+  const handleImageClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.defaultPrevented) return;
+    else if (e.nativeEvent.clientX >= window.innerWidth / 2) goToNextPage();
+    else goToPreviousPage();
+  };
 
   const nextImgPath = getPageNextJsImagePath(
     mangaSlug,
@@ -145,14 +146,15 @@ const MangaPageView = ({
             writingMode: vertical ? "vertical-rl" : "horizontal-tb",
           }}
           onClick={(e) => {
-            e.stopPropagation();
+            if (e.defaultPrevented) return;
+            e.preventDefault(); // Send message to parent components to not run their onClick handlers
             setSelectedSegmentation(segmentation);
           }}
         >
           {lines.map((line, lineIdx) => (
             <p
               key={`block-${blockIdx}-line-${lineIdx}`}
-              className="inline-block cursor-text whitespace-nowrap opacity-0 group-hover:bg-black group-hover:opacity-100"
+              className="hidden cursor-text whitespace-nowrap group-hover:bg-black md:group-hover:inline-block"
             >
               {line}
             </p>
@@ -241,7 +243,7 @@ const MangaPageView = ({
           setSelectedWordId(null);
         }}
       >
-        <DrawerContent className="h-[85vh]">
+        <DrawerContent className="h-[85vh]" aria-describedby={undefined}>
           <DrawerHeader className="pb-0">
             <DrawerTitle>
               <p className="w-full select-text p-3 text-left text-4xl font-light text-muted-foreground lg:text-6xl">

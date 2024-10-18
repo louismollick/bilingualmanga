@@ -39,9 +39,9 @@ const DrawerContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content>
 >(({ className, children, ...props }, ref) => (
   <DrawerPortal>
-    <DrawerOverlay onClick={(e) => e.stopPropagation()} />
+    <DrawerOverlay onClick={(e) => e.preventDefault()} />
     <DrawerPrimitive.Content
-      onClick={(e) => e.stopPropagation()}
+      onClick={(e) => e.preventDefault()}
       ref={ref}
       className={cn(
         "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] border bg-background",
