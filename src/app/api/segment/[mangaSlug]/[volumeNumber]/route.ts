@@ -1,18 +1,47 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import fs from "fs";
-import childProcess from "child_process";
 
 import type { IchiranResponse } from "@/types/ichiran";
 import type { MokuroResponse } from "@/types/mokuro";
 import {
   safelyWriteFile,
-  safelyParseJson,
   safelyReadFile,
 } from "@/lib/ocr/utils";
+import { env } from "@/env.js";
 
-const command = "docker";
-const args = ["exec", "-t", "ichiran", "ichiran-cli"];
+const getSegmentationHealth = async () => {
+  try {
+    const res = await fetch(`${env.ICHIRAN_URL}/health`);
+    if (!res.ok) {
+      const reason = await res.text();
+      const message = `Error returned from Ichiran /health: ${reason}`
+      console.error(message);
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error("Error returned from Ichiran /health:", error);
+    return false;
+  }
+};
+
+const segmentText = async (line: string) => {
+  if (!line) return null;
+  try {
+    const res = await fetch(`${env.ICHIRAN_URL}/segment/${line}`);
+    if (!res.ok) {
+      const reason = await res.text();
+      const message = `Error returned from Ichiran /segment: ${reason}`;
+      console.error(message);
+      return null;
+    }
+    return (await res.json()) as IchiranResponse;
+  } catch (error) {
+    console.error("Error returned from Ichiran /segment:", error);
+    return null;
+  }
+};
 
 export async function GET(
   request: NextRequest,
@@ -21,17 +50,12 @@ export async function GET(
   }: { params: { mangaSlug: string; volumeNumber: string } },
 ) {
   const dirPath = `${process.cwd()}/public/images/${mangaSlug}/jp-JP/_ocr/volume-${volumeNumber}`;
-
-  // Verify ichiran-cli is alive and working
-  const result = childProcess.spawnSync(command, [...args, "-h"], {
-    encoding: "utf8",
-  });
-
-  if (result.error || result.stdout.toLowerCase().includes("error")) {
-    const message = `ichiran-cli not working as expected".\nError: ${result.error}`;
-    console.error(message);
-    return NextResponse.json({ message }, { status: 500 });
+  const isHealthy = await getSegmentationHealth();
+  if (!isHealthy) {
+    return NextResponse.json({ message: "Health error occurred" }, { status: 500 });
   }
+
+  const t0 = performance.now();
 
   // Read each Mokuro OCR .json file in the directory, and for each speech bubble text call ichiran-cli, then save back to .json file
   const fileNames = fs.readdirSync(dirPath);
@@ -51,7 +75,7 @@ export async function GET(
 
       console.info(`Starting segmentation for ${filePath}...`);
       ocr.blocks = await Promise.all(
-        ocr?.blocks.map((block) => {
+        ocr?.blocks.map(async (block) => {
           const input = block.lines.join("\n");
 
           if (!forceResegmentation && block.segmentation) {
@@ -61,26 +85,10 @@ export async function GET(
             return block;
           }
 
-          const result = childProcess.spawnSync(
-            command,
-            [...args, "-f", input],
-            {
-              encoding: "utf8",
-            },
-          );
-
-          if (result.error || result.stderr) {
-            console.error(
-              `Error during segmentation of input: "${input}".\nError: ${result.error} ${result.stderr}`,
-            );
-            return block;
-          }
-
-          const segmentation = safelyParseJson<IchiranResponse>(result.stdout);
-
+          const segmentation = await segmentText(input);
           if (!segmentation) {
             console.error(
-              `Error during segmentation parsing for output: "${JSON.stringify(result.stdout)}"`,
+              `Error during segmentation of input: "${input}".`,
             );
             return block;
           }
@@ -103,5 +111,8 @@ export async function GET(
     }),
   );
 
-  return NextResponse.json({ message: "Success!" }, { status: 200 });
+  const time = performance.now() - t0;
+  console.log(`Segmentation of directory took ${time} milliseconds.`);
+
+  return NextResponse.json({ message: `Success in ${time} milliseconds` }, { status: 200 });
 }
