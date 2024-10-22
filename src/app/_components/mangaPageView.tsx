@@ -7,17 +7,24 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { House, ArrowBigLeft } from "lucide-react";
 
-import type { MokuroResponse } from "@/types/mokuro";
-import type { IchiranResponse, WordReadingForRender } from "@/types/ichiran";
-import { Language, type LanguageType } from "@/types/language";
-import { Button } from "@/app/_components/ui/button";
 import {
   Drawer,
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
 } from "@/app/_components/ui/drawer";
+import { Button } from "@/app/_components/ui/button";
+import { Slider } from "@/app/_components/ui/slider";
 import { Tabs, TabsList, TabsTrigger } from "@/app/_components/ui/tabs";
+
+import {
+  ZOOM_PERCENTAGES_VH_STYLES,
+  MIN_PERCENTAGE,
+  MAX_PERCENTAGE,
+} from "@/lib/ui/constants";
+import type { MokuroResponse } from "@/types/mokuro";
+import type { IchiranResponse, WordReadingForRender } from "@/types/ichiran";
+import { Language, type LanguageType } from "@/types/language";
 import WordReadingCard from "@/app/_components/wordReadingCard";
 import useKeyPress from "@/app/_hooks/useKeyPress";
 import { cn } from "@/lib/ui/utils";
@@ -69,6 +76,7 @@ const MangaPageView = ({
   const [selectedSegmentation, setSelectedSegmentation] =
     useState<IchiranResponse | null>(null);
   const [selectedWordId, setSelectedWordId] = useState<string | null>(null);
+  const [zoomPercentage, setZoomPercentage] = useState<number>(100);
   const wordRefs = useRef<Map<string, HTMLElement>>(new Map());
 
   const imgPath = getPageImagePath(
@@ -130,7 +138,7 @@ const MangaPageView = ({
       const top = `${(box[1] * 100) / ocr.img_height}%`;
       const width = `${((box[2] - box[0]) * 100) / ocr.img_width}%`;
       const height = `${((box[3] - box[1]) * 100) / ocr.img_height}%`;
-      const fontSize = `${(font_size * 100) / ocr.img_height}vh`;
+      const fontSize = `${(font_size * zoomPercentage) / ocr.img_height}vh`;
 
       return (
         <div
@@ -170,7 +178,7 @@ const MangaPageView = ({
         onClick={handleImageClick}
         className="flex h-full w-full cursor-pointer justify-center"
       >
-        <div className="relative h-fit w-fit bg-slate-100">
+        <div className="relative h-fit w-fit bg-accent">
           {language === Language.jpJP && speechBubbles}
           <Image
             src={imgPath}
@@ -178,12 +186,15 @@ const MangaPageView = ({
             width={ocr.img_width}
             height={ocr.img_height}
             priority
-            className="h-auto min-w-full select-none md:h-screen md:w-auto"
+            className={cn(
+              "h-auto min-w-full select-none md:w-auto",
+              ZOOM_PERCENTAGES_VH_STYLES[zoomPercentage],
+            )}
           />
         </div>
       </div>
 
-      <nav className="flex w-full items-center justify-around gap-3 text-xs md:absolute md:left-0 md:top-0 md:h-full md:w-24 md:flex-col md:justify-start md:border-r">
+      <nav className="flex w-full items-center justify-around gap-3 text-xs md:fixed md:left-0 md:top-0 md:h-full md:w-24 md:flex-col md:justify-start md:border-r">
         <Link href="/">
           <Button
             variant="ghost"
@@ -235,6 +246,17 @@ const MangaPageView = ({
             </TabsTrigger>
           </TabsList>
         </Tabs>
+
+        <Slider
+          min={MIN_PERCENTAGE}
+          defaultValue={[100]}
+          max={MAX_PERCENTAGE}
+          orientation="vertical"
+          step={25}
+          value={[zoomPercentage]}
+          onValueChange={([zoom]) => setZoomPercentage(zoom!)}
+          className="mb-2 mr-10 mt-auto h-[20%] max-md:hidden"
+        />
       </nav>
       <Drawer
         open={Boolean(selectedSegmentation)}
