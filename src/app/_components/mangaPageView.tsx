@@ -3,9 +3,7 @@
 import React, { useMemo, useRef, useState } from "react";
 import { preload } from "react-dom";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { House, ArrowBigLeft } from "lucide-react";
 
 import {
   Drawer,
@@ -13,22 +11,26 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/app/_components/ui/drawer";
-import { Button } from "@/app/_components/ui/button";
-import { Slider } from "@/app/_components/ui/slider";
-import { Tabs, TabsList, TabsTrigger } from "@/app/_components/ui/tabs";
-
-import {
-  ZOOM_PERCENTAGES_VH_STYLES,
-  MIN_PERCENTAGE,
-  MAX_PERCENTAGE,
-} from "@/lib/ui/constants";
-import type { MokuroResponse } from "@/types/mokuro";
-import type { IchiranResponse, WordReadingForRender } from "@/types/ichiran";
-import { Language, type LanguageType } from "@/types/language";
 import WordReadingCard from "@/app/_components/wordReadingCard";
 import useKeyPress from "@/app/_hooks/useKeyPress";
+import { useLanguage } from "@/app/_hooks/useLanguage";
+import { useZoomPercentage } from "@/app/_hooks/useZoomPercentage";
+import type { MokuroResponse } from "@/types/mokuro";
+import type { IchiranResponse, WordReadingForRender } from "@/types/ichiran";
+import { Language } from "@/types/language";
 import { cn } from "@/lib/ui/utils";
 import { getPageImagePath, getPageNextJsImagePath } from "@/lib/filepath/utils";
+
+export const ZOOM_PERCENTAGES_VH_STYLES: Record<number, string> = {
+  75: "md:h-[75vh]",
+  100: "md:h-[100vh]",
+  125: "md:h-[125vh]",
+  150: "md:h-[150vh]",
+  175: "md:h-[175vh]",
+  200: "md:h-[200vh]",
+  225: "md:h-[225vh]",
+  250: "md:h-[250vh]",
+};
 
 // Regular expression to match only special characters (excluding letters in any language or numbers)
 const containsOnlySpecialCharacters = (input: string) =>
@@ -72,11 +74,12 @@ const MangaPageView = ({
   );
   preload(nextImgPath, { as: "image", fetchPriority: "high" });
 
-  const [language, setLanguage] = useState<LanguageType>(Language.jpJP);
   const [selectedSegmentation, setSelectedSegmentation] =
     useState<IchiranResponse | null>(null);
   const [selectedWordId, setSelectedWordId] = useState<string | null>(null);
-  const [zoomPercentage, setZoomPercentage] = useState<number>(100);
+  const { language } = useLanguage();
+  const { zoomPercentage } = useZoomPercentage();
+
   const wordRefs = useRef<Map<string, HTMLElement>>(new Map());
 
   const imgPath = getPageImagePath(
@@ -194,70 +197,6 @@ const MangaPageView = ({
         </div>
       </div>
 
-      <nav className="flex w-full items-center justify-around gap-3 text-xs md:fixed md:left-0 md:top-0 md:h-full md:w-24 md:flex-col md:justify-start md:border-r">
-        <Link href="/">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="mt-2 h-10 w-10 md:mt-3 md:h-20 md:w-20"
-          >
-            <House className="h-5 w-5" />
-            <span className="sr-only">Home</span>
-          </Button>
-        </Link>
-
-        <Link href={`/read/${mangaSlug}`}>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-10 w-10 md:h-20 md:w-20"
-          >
-            <ArrowBigLeft className="h-5 w-5" />
-            <span className="sr-only">Back to manga</span>
-          </Button>
-        </Link>
-
-        <div className="flex flex-col items-center justify-center md:h-20 md:w-20">
-          <p>Volume</p>
-          <p>{volumeNumber}</p>
-        </div>
-
-        <div className="flex flex-col items-center justify-center md:h-20 md:w-20">
-          <p>Page</p>
-          <p>{pageNumber}</p>
-        </div>
-
-        <Tabs
-          onValueChange={(value) => setLanguage(value as LanguageType)}
-          defaultValue={Language.jpJP}
-        >
-          <TabsList className="md:w-20">
-            <TabsTrigger
-              value={Language.jpJP}
-              className="text-zinc-600 dark:text-zinc-200"
-            >
-              🇯🇵
-            </TabsTrigger>
-            <TabsTrigger
-              value={Language.enUS}
-              className="text-zinc-600 dark:text-zinc-200"
-            >
-              🇺🇸
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-
-        <Slider
-          min={MIN_PERCENTAGE}
-          defaultValue={[100]}
-          max={MAX_PERCENTAGE}
-          orientation="vertical"
-          step={25}
-          value={[zoomPercentage]}
-          onValueChange={([zoom]) => setZoomPercentage(zoom!)}
-          className="mb-2 mr-10 mt-auto h-[20%] max-md:hidden"
-        />
-      </nav>
       <Drawer
         open={Boolean(selectedSegmentation)}
         onClose={() => {

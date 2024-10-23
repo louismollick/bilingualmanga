@@ -4,12 +4,11 @@ import * as React from "react";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 
 import { cn } from "@/lib/ui/utils";
-import { ZOOM_PERCENTAGES_REVERSED } from "@/lib/ui/constants";
 
 const Slider = React.forwardRef<
   React.ElementRef<typeof SliderPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root>
->(({ className, orientation, ...props }, ref) => (
+>(({ className, children, orientation, ...props }, ref) => (
   <SliderPrimitive.Root
     ref={ref}
     className={cn(
@@ -21,17 +20,7 @@ const Slider = React.forwardRef<
     orientation={orientation}
     {...props}
   >
-    {ZOOM_PERCENTAGES_REVERSED.map((percentage, idx) => (
-      <div
-        key={percentage}
-        style={{
-          top: `${(idx / ZOOM_PERCENTAGES_REVERSED.length) * 100}%`,
-        }}
-        className="absolute left-5 z-10 text-accent-foreground"
-      >
-        {percentage === "100" ? "―" : "-"}
-      </div>
-    ))}
+    {children}
     <SliderPrimitive.Track
       className={cn(
         "relative grow overflow-hidden rounded-full bg-secondary",
