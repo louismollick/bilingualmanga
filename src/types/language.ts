@@ -9,3 +9,12 @@ export type MangaPageParams = {
   volumeNumber: string;
   pageNumber: string;
 };
+
+export type MangaPagePaths = {
+  nextPagePath: string;
+  previousPagePath: string;
+  imagePaths: {
+    [key in LanguageType]: string;
+  };
+  nextImgPath: string;
+};

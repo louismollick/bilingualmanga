@@ -17,9 +17,12 @@ import { useLanguage } from "@/app/_hooks/useLanguage";
 import { useZoomPercentage } from "@/app/_hooks/useZoomPercentage";
 import type { MokuroResponse } from "@/types/mokuro";
 import type { IchiranResponse, WordReadingForRender } from "@/types/ichiran";
-import { Language } from "@/types/language";
+import {
+  Language,
+  type MangaPageParams,
+  type MangaPagePaths,
+} from "@/types/language";
 import { cn } from "@/lib/ui/utils";
-import { getPageImagePath, getPageNextJsImagePath } from "@/lib/filepath/utils";
 
 export const ZOOM_PERCENTAGES_VH_STYLES: Record<number, string> = {
   75: "md:h-[75vh]",
@@ -41,20 +44,15 @@ const MangaPageView = ({
   volumeNumber,
   pageNumber,
   ocr,
-}: {
-  mangaSlug: string;
-  volumeNumber: string;
-  pageNumber: string;
+  paths,
+}: MangaPageParams & {
   ocr: MokuroResponse;
+  paths: MangaPagePaths;
 }) => {
   const router = useRouter();
-  const pageNumberParsed = parseInt(pageNumber, 10);
-  const nextPageNumStr = `${pageNumberParsed + 1}`;
 
-  const nextPagePath = `/read/${mangaSlug}/${volumeNumber}/${nextPageNumStr}`;
-  const goToNextPage = () => router.push(nextPagePath);
-  const previousPagePath = `/read/${mangaSlug}/${volumeNumber}/${pageNumberParsed - 1}`;
-  const goToPreviousPage = () => router.push(previousPagePath);
+  const goToNextPage = () => router.push(paths.nextPagePath);
+  const goToPreviousPage = () => router.push(paths.previousPagePath);
 
   useKeyPress({
     ArrowLeft: goToPreviousPage,
@@ -67,12 +65,7 @@ const MangaPageView = ({
     else goToPreviousPage();
   };
 
-  const nextImgPath = getPageNextJsImagePath(
-    mangaSlug,
-    volumeNumber,
-    nextPageNumStr,
-  );
-  preload(nextImgPath, { as: "image", fetchPriority: "high" });
+  preload(paths.nextImgPath, { as: "image", fetchPriority: "high" });
 
   const [selectedSegmentation, setSelectedSegmentation] =
     useState<IchiranResponse | null>(null);
@@ -81,13 +74,6 @@ const MangaPageView = ({
   const { zoomPercentage } = useZoomPercentage();
 
   const wordRefs = useRef<Map<string, HTMLElement>>(new Map());
-
-  const imgPath = getPageImagePath(
-    mangaSlug,
-    volumeNumber,
-    pageNumber,
-    language,
-  );
 
   const scrollWordReadingIntoView = (wordId: string) =>
     wordRefs.current.get(wordId)?.scrollIntoView({
@@ -184,7 +170,7 @@ const MangaPageView = ({
         <div className="relative h-fit w-fit bg-accent">
           {language === Language.jpJP && speechBubbles}
           <Image
-            src={imgPath}
+            src={paths.imagePaths[language]}
             alt={`${mangaSlug} Volume ${volumeNumber} Page number ${pageNumber} Language ${language}`}
             width={ocr.img_width}
             height={ocr.img_height}
