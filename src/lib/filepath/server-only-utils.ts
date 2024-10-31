@@ -3,7 +3,7 @@
 import { Language } from "@/types/language";
 import { getPageFileName, VOLUME_PREFIX } from "@/lib/filepath/utils";
 
-export const MANGA_SLUGS_DIR = `${process.cwd()}/public/images`;
+export const MANGA_SLUGS_DIR = `${process.cwd()}/images`;
 
 export const getMangaOcrDir = (mangaSlug: string) =>
   `${MANGA_SLUGS_DIR}/${mangaSlug}/${Language.jpJP}/_ocr`;

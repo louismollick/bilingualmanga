@@ -1,4 +1,5 @@
 import { Language, type LanguageType } from "@/types/language";
+import { env } from '@/env';
 
 export const VOLUME_PREFIX = "volume-";
 
@@ -11,7 +12,7 @@ export const getPageImagePath = (
   pageNumber: string,
   language: LanguageType,
 ) =>
-  `/images/${mangaSlug}/${language}/${VOLUME_PREFIX}${volumeNumber}/${getPageFileName(pageNumber, ".JPG")}`;
+  `${env.NEXT_PUBLIC_IMAGE_HOST}/images/${mangaSlug}/${language}/${VOLUME_PREFIX}${volumeNumber}/${getPageFileName(pageNumber, ".JPG")}`;
 
 export const getPageNextJsImagePath = (
   mangaSlug: string,
