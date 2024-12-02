@@ -1,10 +1,6 @@
-import React, { forwardRef } from "react";
-import type {
-  WordReadingForRender,
-  Conj,
-  Gloss,
-  WordReading,
-} from "@/types/ichiran";
+import React, { forwardRef, type ReactNode } from "react";
+import Image from "next/image";
+import type { Conj, Gloss, WordReading } from "@/types/ichiran";
 import {
   Card,
   CardContent,
@@ -12,7 +8,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/app/_components/ui/card";
+import { Button } from "@/app/_components/ui/button";
 import { cn } from "@/lib/ui/utils";
+import { type WordReadingForRender } from "@/types/ui";
 
 function WordGloss({
   gloss,
@@ -61,7 +59,7 @@ function WordConj({ conj }: { conj?: Conj[] }) {
   );
 }
 
-function WordReadingContent({
+export function WordReadingContent({
   wordReading,
   showReading = true,
 }: {
@@ -98,10 +96,12 @@ function WordReadingContent({
 
 type Props = {
   wordReading: WordReadingForRender;
+  onAddWordToAnki?: () => void;
+  sentence?: ReactNode;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export default forwardRef<HTMLDivElement, Props>(function WordReadingCard(
-  { wordReading, className, ...props },
+  { wordReading, onAddWordToAnki, sentence, className, ...props },
   ref,
 ) {
   return (
@@ -110,11 +110,26 @@ export default forwardRef<HTMLDivElement, Props>(function WordReadingCard(
       className={cn("max-h-96 select-text", className)}
       {...props}
     >
-      <CardHeader>
+      <CardHeader className="relative">
+        {onAddWordToAnki && (
+          <Button
+            variant="ghost"
+            className="absolute right-0 top-0 py-0"
+            onClick={onAddWordToAnki}
+          >
+            <Image
+              src="/add-to-anki.svg"
+              alt="Add this word to Anki"
+              width={40}
+              height={40}
+            />
+          </Button>
+        )}
         <CardTitle>{wordReading.reading}</CardTitle>
         {wordReading.romaji && (
           <CardDescription>{wordReading.romaji}</CardDescription>
         )}
+        {sentence}
       </CardHeader>
       <CardContent className="max-h-[250px] overflow-y-scroll text-sm">
         <WordReadingContent wordReading={wordReading} showReading={false} />

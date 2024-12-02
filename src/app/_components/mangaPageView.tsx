@@ -15,29 +15,14 @@ import WordReadingCard from "@/app/_components/wordReadingCard";
 import useKeyPress from "@/app/_hooks/useKeyPress";
 import { useLanguage } from "@/app/_hooks/useLanguage";
 import { useZoomPercentage } from "@/app/_hooks/useZoomPercentage";
-import type { MokuroResponse } from "@/types/mokuro";
-import type { IchiranResponse, WordReadingForRender } from "@/types/ichiran";
 import {
   Language,
   type MangaPageParams,
   type MangaPagePaths,
 } from "@/types/language";
 import { cn } from "@/lib/ui/utils";
-
-export const ZOOM_PERCENTAGES_VH_STYLES: Record<number, string> = {
-  75: "md:h-[75vh]",
-  100: "md:h-[100vh]",
-  125: "md:h-[125vh]",
-  150: "md:h-[150vh]",
-  175: "md:h-[175vh]",
-  200: "md:h-[200vh]",
-  225: "md:h-[225vh]",
-  250: "md:h-[250vh]",
-};
-
-// Regular expression to match only special characters (excluding letters in any language or numbers)
-const containsOnlySpecialCharacters = (input: string) =>
-  /^[^\p{L}\p{N}]+$/u.test(input);
+import { type MokuroResponseForRender } from "@/types/ui";
+import { ZOOM_PERCENTAGES_VH_STYLES } from "@/app/_components/navigationBar";
 
 const MangaPageView = ({
   mangaSlug,
@@ -45,9 +30,11 @@ const MangaPageView = ({
   pageNumber,
   ocr,
   paths,
+  onAddWordToAnki,
 }: MangaPageParams & {
-  ocr: MokuroResponse;
+  ocr: MokuroResponseForRender;
   paths: MangaPagePaths;
+  onAddWordToAnki: (blockIdx: number, wordIdx: number) => Promise<void>;
 }) => {
   const router = useRouter();
 
@@ -67,98 +54,67 @@ const MangaPageView = ({
 
   preload(paths.nextImgPath, { as: "image", fetchPriority: "high" });
 
-  const [selectedSegmentation, setSelectedSegmentation] =
-    useState<IchiranResponse | null>(null);
-  const [selectedWordId, setSelectedWordId] = useState<string | null>(null);
+  const [selectedBlockIdx, setSelectedBlockIdx] = useState<number | null>(null);
+  const [selectedWordIdx, setSelectedWordIdx] = useState<number | null>(null);
   const { language } = useLanguage();
   const { zoomPercentage } = useZoomPercentage();
 
-  const wordRefs = useRef<Map<string, HTMLElement>>(new Map());
+  const wordRefs = useRef<Map<number, HTMLElement>>(new Map());
 
-  const scrollWordReadingIntoView = (wordId: string) =>
+  const scrollWordReadingIntoView = (wordId: number) =>
     wordRefs.current.get(wordId)?.scrollIntoView({
       behavior: "smooth",
       block: "center",
       inline: "nearest",
     });
 
-  const wordReadings = useMemo(
+  const wordReadings =
+    selectedBlockIdx !== null
+      ? ocr.blocks[selectedBlockIdx]?.wordReadings
+      : null;
+
+  const speechBubbles = useMemo(
     () =>
-      selectedSegmentation
-        ? selectedSegmentation.flatMap<WordReadingForRender>(
-            (wordChain, wordChainIdx) => {
-              // Edge case when dictionary info available
-              if (typeof wordChain === "string")
-                return {
-                  id: `chain-${wordChainIdx}`,
-                  reading: wordChain,
-                  text: wordChain,
-                  isPunctuation: containsOnlySpecialCharacters(wordChain),
-                };
+      ocr.blocks.map(({ box, font_size, vertical, lines }, blockIdx) => {
+        // Find the ratio/percentages for positioning the speech bubbles
+        const left = `${(box[0] * 100) / ocr.img_width}%`;
+        const top = `${(box[1] * 100) / ocr.img_height}%`;
+        const width = `${((box[2] - box[0]) * 100) / ocr.img_width}%`;
+        const height = `${((box[3] - box[1]) * 100) / ocr.img_height}%`;
+        const fontSize = `${(font_size * zoomPercentage) / ocr.img_height}vh`;
 
-              const [[words]] = wordChain;
-              return words.map((word, wordIdx) => {
-                const [romaji, wordAlternatives] = word;
-
-                // If we have alternative readings, just take the first one.
-                const wordReading =
-                  "alternative" in wordAlternatives
-                    ? wordAlternatives.alternative[0]!
-                    : wordAlternatives;
-
-                return {
-                  ...wordReading,
-                  id: `chain-${wordChainIdx}-word-${wordIdx}`,
-                  romaji,
-                  text: wordReading.text!,
-                  isPunctuation: false,
-                };
-              });
-            },
-          )
-        : null,
-    [selectedSegmentation],
-  );
-
-  const speechBubbles = ocr.blocks.map(
-    ({ box, font_size, vertical, lines, segmentation }, blockIdx) => {
-      // Find the ratio/percentages for positioning the speech bubbles
-      const left = `${(box[0] * 100) / ocr.img_width}%`;
-      const top = `${(box[1] * 100) / ocr.img_height}%`;
-      const width = `${((box[2] - box[0]) * 100) / ocr.img_width}%`;
-      const height = `${((box[3] - box[1]) * 100) / ocr.img_height}%`;
-      const fontSize = `${(font_size * zoomPercentage) / ocr.img_height}vh`;
-
-      return (
-        <div
-          key={`block-${blockIdx}`}
-          className="group absolute border border-green-400"
-          // You can't use dynamic styles with Tailwind. So need to use inline style prop instead.
-          style={{
-            left,
-            top,
-            width,
-            height,
-            fontSize,
-            writingMode: vertical ? "vertical-rl" : "horizontal-tb",
-          }}
-          onClick={(e) => {
-            if (e.defaultPrevented) return;
-            e.preventDefault(); // Send message to parent components to not run their onClick handlers
-            setSelectedSegmentation(segmentation);
-          }}
-        >
-          {lines.map((line, lineIdx) => (
-            <p
-              key={`block-${blockIdx}-line-${lineIdx}`}
-              className="hidden cursor-text whitespace-nowrap group-hover:bg-black md:group-hover:inline-block"
-            >
-              {line}
-            </p>
-          ))}
-        </div>
-      );
-    },
+        return (
+          <div
+            key={`block-${blockIdx}`}
+            className="group absolute border border-green-400"
+            // You can't use dynamic styles with Tailwind. So need to use inline style prop instead.
+            style={{
+              left,
+              top,
+              width,
+              height,
+              fontSize,
+              writingMode: vertical ? "vertical-rl" : "horizontal-tb",
+            }}
+            onClick={(e) => {
+              if (e.defaultPrevented) return;
+              e.preventDefault(); // Send message to parent components to not run their onClick handlers
+              setSelectedBlockIdx(blockIdx);
+            }}
+          >
+            {lines.map((line, lineIdx) => (
+              <p
+                key={`block-${blockIdx}-line-${lineIdx}`}
+                className="hidden cursor-text whitespace-nowrap group-hover:bg-black md:group-hover:inline-block"
+              >
+                {line}
+              </p>
+            ))}
+          </div>
+        );
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [zoomPercentage],
   );
 
   return (
@@ -184,28 +140,28 @@ const MangaPageView = ({
       </div>
 
       <Drawer
-        open={Boolean(selectedSegmentation)}
+        open={selectedBlockIdx !== null}
         onClose={() => {
-          setSelectedSegmentation(null);
-          setSelectedWordId(null);
+          setSelectedBlockIdx(null);
+          setSelectedWordIdx(null);
         }}
       >
         <DrawerContent className="h-[85vh]" aria-describedby={undefined}>
           <DrawerHeader className="pb-0">
             <DrawerTitle>
               <p className="w-full select-text p-3 text-left text-4xl font-light text-muted-foreground lg:text-6xl">
-                {wordReadings?.map(({ id, isPunctuation, text }) => (
+                {wordReadings?.map(({ isPunctuation, text }, wordIdx) => (
                   <span
-                    key={`word-${id}`}
+                    key={`word-${wordIdx}`}
                     className={cn(
                       !isPunctuation &&
                         "hover:text-accent-foreground hover:underline",
-                      selectedWordId === id &&
+                      selectedWordIdx === wordIdx &&
                         "text-accent-foreground underline",
                     )}
                     onClick={() => {
-                      scrollWordReadingIntoView(id);
-                      setSelectedWordId(id);
+                      scrollWordReadingIntoView(wordIdx);
+                      setSelectedWordIdx(wordIdx);
                     }}
                   >
                     {text}
@@ -215,26 +171,31 @@ const MangaPageView = ({
             </DrawerTitle>
           </DrawerHeader>
           <div className="grid h-full grid-cols-1 gap-4 overflow-y-scroll p-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {wordReadings
-              ?.filter(({ isPunctuation }) => !isPunctuation)
-              .map((wordReading, idx) => (
+            {wordReadings?.map((wordReading, wordIdx) =>
+              wordReading.isPunctuation ? null : (
                 <WordReadingCard
-                  key={`wordreading-${idx}`}
+                  key={`wordreading-${wordIdx}`}
                   wordReading={wordReading}
                   onClick={() => {
-                    scrollWordReadingIntoView(wordReading.id);
-                    setSelectedWordId(wordReading.id);
+                    scrollWordReadingIntoView(wordIdx);
+                    setSelectedWordIdx(wordIdx);
+                  }}
+                  onAddWordToAnki={() => {
+                    console.log(
+                      `Adding word to Anki selectedBlockIdx: ${selectedBlockIdx} wordIdx: ${wordIdx}`,
+                    );
+                    void onAddWordToAnki(selectedBlockIdx!, wordIdx);
                   }}
                   ref={(node) => {
-                    if (node) wordRefs.current.set(wordReading.id, node);
-                    else wordRefs.current.delete(wordReading.id);
+                    if (node) wordRefs.current.set(wordIdx, node);
+                    else wordRefs.current.delete(wordIdx);
                   }}
                   className={cn(
-                    selectedWordId === wordReading.id &&
-                      "border-accent-foreground",
+                    selectedWordIdx === wordIdx && "border-accent-foreground",
                   )}
                 />
-              ))}
+              ),
+            )}
           </div>
         </DrawerContent>
       </Drawer>

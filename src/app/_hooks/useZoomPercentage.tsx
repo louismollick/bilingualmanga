@@ -1,7 +1,8 @@
 "use client";
 
 import React, { createContext, useState } from "react";
-import { DEFAULT_ZOOM_PERCENTAGE } from "@/app/_components/navigationBar";
+
+export const DEFAULT_ZOOM_PERCENTAGE = 100;
 
 type ZoomPercentageContextValue = {
   zoomPercentage: number;
