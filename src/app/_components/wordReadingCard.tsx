@@ -1,5 +1,4 @@
 import React, { forwardRef, type ReactNode } from "react";
-import Image from "next/image";
 import type { Conj, Gloss, WordReading } from "@/types/ichiran";
 import {
   Card,
