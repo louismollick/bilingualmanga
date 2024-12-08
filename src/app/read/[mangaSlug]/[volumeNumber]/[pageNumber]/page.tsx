@@ -85,9 +85,7 @@ export default async function MangaPage({
     // Color the word in the sentence
     const sentenceWordTexts = block.wordReadings.map((reading) => reading.text);
     const precedingText = sentenceWordTexts.slice(0, wordIdx).join("");
-    const succeedingText = sentenceWordTexts
-      .slice(wordIdx + 1, wordIdx)
-      .join("");
+    const succeedingText = sentenceWordTexts.slice(wordIdx + 1).join("");
 
     await addWordToAnki(
       generateFrontOfCard(wordReading),
