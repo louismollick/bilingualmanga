@@ -64,3 +64,7 @@
     @apply bg-background text-foreground;
   }
 }
+/* This class is used for the anki card styling. */
+.card {
+  @apply dark bg-background text-accent-foreground;
+}

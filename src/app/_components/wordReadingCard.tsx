@@ -11,6 +11,7 @@ import {
 import { Button } from "@/app/_components/ui/button";
 import { cn } from "@/lib/ui/utils";
 import { type WordReadingForRender } from "@/types/ui";
+import AnkiIcon from "@/app/_components/ankiIcon";
 
 function WordGloss({
   gloss,
@@ -114,15 +115,10 @@ export default forwardRef<HTMLDivElement, Props>(function WordReadingCard(
         {onAddWordToAnki && (
           <Button
             variant="ghost"
-            className="absolute right-0 top-0 py-0"
+            className="absolute right-1 top-1 h-14 w-14 p-2"
             onClick={onAddWordToAnki}
           >
-            <Image
-              src="/add-to-anki.svg"
-              alt="Add this word to Anki"
-              width={40}
-              height={40}
-            />
+            <AnkiIcon className="h-7 w-7 fill-current text-muted-foreground" />
           </Button>
         )}
         <CardTitle>{wordReading.reading}</CardTitle>

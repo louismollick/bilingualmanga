@@ -1,5 +1,4 @@
 import MangaPageView from "@/app/_components/mangaPageView";
-import WordReadingCard from "@/app/_components/wordReadingCard";
 import { getPageImagePath, getPageNextJsImagePath } from "@/lib/filepath/utils";
 import { getPageOcr } from "@/lib/ocr/utils";
 import {
@@ -11,15 +10,16 @@ import {
   type MokuroResponseForRender,
   type WordReadingForRender,
 } from "@/types/ui";
-import addWordToAnki from "@/lib/anki";
-import juice from "juice";
-import fs from "fs";
+import addWordToAnki from "@/lib/anki/addWordToAnki";
+import {
+  generateBackOfCard,
+  generateFrontOfCard,
+} from "@/lib/anki/generateCard";
+import syncWithAnkiWeb from "@/lib/anki/syncWithAnkiWeb";
 
 // Regular expression to match only special characters (excluding letters in any language or numbers)
 const containsOnlySpecialCharacters = (input: string) =>
   /^[^\p{L}\p{N}]+$/u.test(input);
-
-const ANKI_CSS = fs.readFileSync(`${process.cwd()}/public/anki.css`, "utf8");
 
 export default async function MangaPage({
   params,
@@ -88,22 +88,12 @@ export default async function MangaPage({
     const succeedingText = sentenceWordTexts
       .slice(wordIdx + 1, wordIdx)
       .join("");
-    const sentence = (
-      <p className="text-sm">
-        {precedingText}
-        <span className="text-green-600">{wordReading.text}</span>
-        {succeedingText}
-      </p>
-    );
 
-    const ReactDOMServer = (await import("react-dom/server")).default;
-    const backOfCard = juice.inlineContent(
-      ReactDOMServer.renderToStaticMarkup(
-        <WordReadingCard wordReading={wordReading} sentence={sentence} />,
-      ),
-      ANKI_CSS,
+    await addWordToAnki(
+      generateFrontOfCard(wordReading),
+      generateBackOfCard(precedingText, succeedingText, wordReading),
     );
-    await addWordToAnki(wordReading.text, backOfCard);
+    await syncWithAnkiWeb();
   };
 
   const pageNumberParsed = parseInt(pageNumber, 10);

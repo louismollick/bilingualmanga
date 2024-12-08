@@ -8,7 +8,9 @@ export const env = createEnv({
    */
   server: {
     NODE_ENV: z.enum(["development", "test", "production"]),
-    ANKI_CONNECT_URL: z.string().default("http://localhost:8765"),
+    ANKI_CONNECT_URL: z
+      .string()
+      .default("https://anki-connect.louismollick.com"),
   },
 
   /**
