@@ -96,12 +96,12 @@ export function WordReadingContent({
 
 type Props = {
   wordReading: WordReadingForRender;
-  onAddWordToAnki?: () => void;
   sentence?: ReactNode;
+  ankiBtn?: ReactNode;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export default forwardRef<HTMLDivElement, Props>(function WordReadingCard(
-  { wordReading, onAddWordToAnki, sentence, className, ...props },
+  { wordReading, sentence, ankiBtn, className, ...props },
   ref,
 ) {
   return (
@@ -111,15 +111,7 @@ export default forwardRef<HTMLDivElement, Props>(function WordReadingCard(
       {...props}
     >
       <CardHeader className="relative">
-        {onAddWordToAnki && (
-          <Button
-            variant="ghost"
-            className="absolute right-1 top-1 h-14 w-14 p-2"
-            onClick={onAddWordToAnki}
-          >
-            <AnkiIcon className="h-7 w-7 fill-current text-muted-foreground" />
-          </Button>
-        )}
+        {ankiBtn}
         <CardTitle>{wordReading.reading}</CardTitle>
         {wordReading.romaji && (
           <CardDescription>{wordReading.romaji}</CardDescription>

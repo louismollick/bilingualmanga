@@ -1,15 +1,14 @@
 import { env } from "@/env";
 
-async function addWordToAnki(Front: string, Back: string) {
+async function canAddWordsToAnki(texts: string[]) {
   const res = await fetch(env.ANKI_CONNECT_URL, {
     method: "POST",
     body: JSON.stringify({
-      action: "addNote",
+      action: "canAddNotes",
       params: {
-        note: {
+        notes: texts.map((text) => ({
           fields: {
-            Front,
-            Back,
+            Front: text,
           },
           tags: ["louismollick"],
           deckName: "Expression Mining",
@@ -23,7 +22,7 @@ async function addWordToAnki(Front: string, Back: string) {
               checkAllModels: false,
             },
           },
-        },
+        })),
       },
       version: 6,
     }),
@@ -31,12 +30,14 @@ async function addWordToAnki(Front: string, Back: string) {
 
   if (!res.ok) {
     const reason = await res.text();
-    const message = `HTTP error adding word to Anki: ${reason}`;
+    const message = `HTTP error checking if can add notes to Anki: ${reason}`;
     console.error(message);
     throw new Error(message);
   }
 
-  console.log("Successfully added word to Anki:", Front);
+  const json = (await res.json()) as { result: boolean[] };
+
+  return json.result;
 }
 
-export default addWordToAnki;
+export default canAddWordsToAnki;

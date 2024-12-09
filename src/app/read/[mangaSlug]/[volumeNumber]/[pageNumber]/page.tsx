@@ -16,6 +16,8 @@ import {
   generateFrontOfCard,
 } from "@/lib/anki/generateCard";
 import syncWithAnkiWeb from "@/lib/anki/syncWithAnkiWeb";
+import canAddWordsToAnki from "@/lib/anki/canAddWordsToAnki";
+import mapOnlyFilteredItems from "@/lib/utils/mapOnlyFilteredItems";
 
 // Regular expression to match only special characters (excluding letters in any language or numbers)
 const containsOnlySpecialCharacters = (input: string) =>
@@ -94,6 +96,33 @@ export default async function MangaPage({
     await syncWithAnkiWeb();
   };
 
+  // Check if notes can be added to Anki (i.e if they're not already in the deck)
+  const onCanAddWordsToAnki = async (blockIdx: number) => {
+    "use server";
+    const wordReadings = ocr.blocks[blockIdx]?.wordReadings;
+
+    if (!wordReadings) {
+      const message = `Word readings not found. blockIdx: ${blockIdx}`;
+      console.error(message);
+      throw new Error(message);
+    }
+
+    try {
+      return await mapOnlyFilteredItems(
+        wordReadings,
+        (wordReading) => !wordReading.isPunctuation,
+        (wordReadings) =>
+          canAddWordsToAnki(wordReadings.map((word) => word.text)),
+        false,
+      );
+    } catch (error) {
+      console.error(
+        `Error checking if notes can be added to Anki: ${JSON.stringify(error)}`,
+      );
+      throw error;
+    }
+  };
+
   const pageNumberParsed = parseInt(pageNumber, 10);
   const paths: MangaPagePaths = {
     nextPagePath: `/read/${mangaSlug}/${volumeNumber}/${pageNumberParsed + 1}`,
@@ -125,6 +154,7 @@ export default async function MangaPage({
       ocr={ocr}
       paths={paths}
       onAddWordToAnki={onAddWordToAnki}
+      onCanAddWordsToAnki={onCanAddWordsToAnki}
     />
   );
 }

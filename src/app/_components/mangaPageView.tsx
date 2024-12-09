@@ -11,6 +11,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/app/_components/ui/drawer";
+import AnkiButton from "@/app/_components/ankiButton";
 import WordReadingCard from "@/app/_components/wordReadingCard";
 import useKeyPress from "@/app/_hooks/useKeyPress";
 import { useLanguage } from "@/app/_hooks/useLanguage";
@@ -31,10 +32,12 @@ const MangaPageView = ({
   ocr,
   paths,
   onAddWordToAnki,
+  onCanAddWordsToAnki,
 }: MangaPageParams & {
   ocr: MokuroResponseForRender;
   paths: MangaPagePaths;
   onAddWordToAnki: (blockIdx: number, wordIdx: number) => Promise<void>;
+  onCanAddWordsToAnki: (blockIdx: number) => Promise<boolean[]>;
 }) => {
   const router = useRouter();
 
@@ -160,6 +163,7 @@ const MangaPageView = ({
                         "text-accent-foreground underline",
                     )}
                     onClick={() => {
+                      if (isPunctuation) return;
                       scrollWordReadingIntoView(wordIdx);
                       setSelectedWordIdx(wordIdx);
                     }}
@@ -180,12 +184,6 @@ const MangaPageView = ({
                     scrollWordReadingIntoView(wordIdx);
                     setSelectedWordIdx(wordIdx);
                   }}
-                  onAddWordToAnki={() => {
-                    console.log(
-                      `Adding word to Anki selectedBlockIdx: ${selectedBlockIdx} wordIdx: ${wordIdx}`,
-                    );
-                    void onAddWordToAnki(selectedBlockIdx!, wordIdx);
-                  }}
                   ref={(node) => {
                     if (node) wordRefs.current.set(wordIdx, node);
                     else wordRefs.current.delete(wordIdx);
@@ -193,6 +191,16 @@ const MangaPageView = ({
                   className={cn(
                     selectedWordIdx === wordIdx && "border-accent-foreground",
                   )}
+                  ankiBtn={
+                    selectedBlockIdx !== null ? (
+                      <AnkiButton
+                        blockIdx={selectedBlockIdx}
+                        wordIdx={wordIdx}
+                        onAddWordToAnki={onAddWordToAnki}
+                        onCanAddWordsToAnki={onCanAddWordsToAnki}
+                      />
+                    ) : null
+                  }
                 />
               ),
             )}

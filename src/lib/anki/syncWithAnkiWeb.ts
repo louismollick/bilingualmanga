@@ -4,8 +4,8 @@ async function syncWithAnkiWeb() {
   const res = await fetch(env.ANKI_CONNECT_URL, {
     method: "POST",
     body: JSON.stringify({
-      "action": "sync",
-      "version": 6
+      action: "sync",
+      version: 6,
     }),
   });
 
