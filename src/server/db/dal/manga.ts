@@ -3,19 +3,18 @@
 
 import { db } from "@/server/db";
 import {
-  and,
   type AnyColumn,
-  eq,
   type GetColumnData,
+  type SQL,
+  and,
+  eq,
   getTableColumns,
   is,
-  type SelectedFields,
-  type SQL,
   sql,
 } from "drizzle-orm";
-import { speechBubble, mangaPage, manga } from "../schema/bilingualmanga";
-import { PgTimestampString } from "drizzle-orm/pg-core";
+import { PgTimestampString, type SelectedFields } from "drizzle-orm/pg-core";
 import { type SelectResultFields } from "drizzle-orm/query-builders/select.types";
+import { speechBubble, mangaPage, manga } from "@/server/db/schema/bilingualmanga";
 
 /**
  * Coalesce a value to a default value if the value is null
@@ -33,7 +32,7 @@ export function jsonAgg<Column extends AnyColumn>(column: Column) {
   );
 }
 
-export function jsonBuildObject<T extends SelectedFields<any, any>>(shape: T) {
+export function jsonBuildObject<T extends SelectedFields>(shape: T) {
   const chunks: SQL[] = [];
 
   Object.entries(shape).forEach(([key, value]) => {
@@ -55,21 +54,23 @@ export function jsonBuildObject<T extends SelectedFields<any, any>>(shape: T) {
 }
 
 export function jsonAggBuildObject<
-  T extends SelectedFields<any, any>,
-  Column extends AnyColumn,
+  T extends SelectedFields
 >(
   shape: T,
-  options?: { orderBy?: { colName: Column; direction: "ASC" | "DESC" } },
+  options?: { notNull?: { colName: AnyColumn }, orderBy?: { colName: AnyColumn; direction: "ASC" | "DESC" } },
 ) {
   return sql<SelectResultFields<T>[]>`coalesce(
     json_agg(${jsonBuildObject(shape)}
-    ${
-      options?.orderBy
-        ? sql`ORDER BY ${options.orderBy.colName} ${sql.raw(
-            options.orderBy.direction,
-          )}`
-        : undefined
-    })
+    ${options?.orderBy
+      ? sql`ORDER BY ${options.orderBy.colName} ${sql.raw(
+        options.orderBy.direction,
+      )}`
+      : undefined
+    }) 
+    ${options?.notNull
+      ? sql`FILTER (WHERE ${options.notNull.colName} IS NOT NULL)`
+      : undefined
+    }
     ,'${sql`[]`}')`;
 }
 
@@ -84,17 +85,18 @@ export const getPageOcr = async (
   volumeNumber: number,
   pageNumber: number,
 ) => {
-  const query = db
+  const result = await db
     .select({
       imgWidth: mangaPage.imgWidth,
       imgHeight: mangaPage.imgHeight,
       blocks: jsonAggBuildObject(getTableColumns(speechBubble), {
+        notNull: { colName: speechBubble.id },
         orderBy: { colName: speechBubble.blockNum, direction: "ASC" },
       }),
     })
     .from(mangaPage)
     .innerJoin(manga, eq(manga.id, mangaPage.mangaId))
-    .innerJoin(speechBubble, eq(speechBubble.mangaPageId, mangaPage.id))
+    .leftJoin(speechBubble, eq(speechBubble.mangaPageId, mangaPage.id))
     .where(
       and(
         eq(manga.slug, mangaSlug),
@@ -103,10 +105,6 @@ export const getPageOcr = async (
       ),
     )
     .groupBy(mangaPage.id, mangaPage.imgWidth, mangaPage.imgHeight);
-
-  const result = await query;
-
-  console.log(`getPageOcr: ${JSON.stringify(result)}`);
 
   if (!result.length) return null;
 
