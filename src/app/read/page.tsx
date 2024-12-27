@@ -1,9 +1,12 @@
 import Link from "next/link";
 import Image from "next/image";
-import { getMangaSlugs } from "@/lib/ocr/utils";
+import { getManga } from "@/server/db/dal/manga";
+
+export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const mangaSlugs = await getMangaSlugs();
+  const mangaSlugs = await getManga();
+
   if (!mangaSlugs?.length) return <div>No manga found!</div>;
 
   return (
@@ -12,22 +15,22 @@ export default async function Home() {
         Bilingual <span className="text-[hsl(280,100%,70%)]">Manga</span>
       </h1>
       <div className="grid h-full grid-cols-1 gap-4 overflow-y-scroll p-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-        {mangaSlugs.map((mangaName, idx) => (
+        {mangaSlugs.map(({ slug, enName, jpName, author }, idx) => (
           <Link
             key={idx}
-            href={`/read/${mangaName}`}
+            href={`/read/${slug}`}
             className="flex flex-col gap-3"
           >
             <div className="relative h-80">
               <Image
-                alt={`${mangaName} cover`}
+                alt={`${enName} cover`}
                 src="/images/dorohedoro/jp-JP/volume-2/003.JPG"
                 fill
                 className="object-contain object-left"
               />
             </div>
 
-            {mangaName}
+            <p>{`${enName} (${jpName}) by ${author}`}</p>
           </Link>
         ))}
       </div>

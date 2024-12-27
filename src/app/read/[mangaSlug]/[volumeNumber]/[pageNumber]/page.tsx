@@ -1,13 +1,12 @@
 import MangaPageView from "@/app/_components/mangaPageView";
 import { getPageImagePath, getPageNextJsImagePath } from "@/lib/filepath/utils";
-import { getPageOcr } from "@/lib/ocr/utils";
 import {
   Language,
   type MangaPagePaths,
   type MangaPageParams,
 } from "@/types/language";
 import {
-  type MokuroResponseForRender,
+  type GetPageOcrResponseForRender,
   type WordReadingForRender,
 } from "@/types/ui";
 import addWordToAnki from "@/lib/anki/addWordToAnki";
@@ -18,6 +17,7 @@ import {
 import syncWithAnkiWeb from "@/lib/anki/syncWithAnkiWeb";
 import canAddWordsToAnki from "@/lib/anki/canAddWordsToAnki";
 import mapOnlyFilteredItems from "@/lib/utils/mapOnlyFilteredItems";
+import { getPageOcr } from "@/server/db/dal/manga";
 
 // Regular expression to match only special characters (excluding letters in any language or numbers)
 const containsOnlySpecialCharacters = (input: string) =>
@@ -29,15 +29,20 @@ export default async function MangaPage({
   params: MangaPageParams;
 }) {
   const { mangaSlug, volumeNumber, pageNumber } = params;
-  const _ocr = await getPageOcr(mangaSlug, volumeNumber, pageNumber);
+  const _ocr = await getPageOcr(
+    mangaSlug,
+    parseInt(volumeNumber),
+    parseInt(pageNumber),
+  );
+
   if (!_ocr) return <div>Page not found.</div>;
 
   // Convert the OCR response to a format that can be rendered
-  const ocr: MokuroResponseForRender = {
+  const ocr: GetPageOcrResponseForRender = {
     ..._ocr,
     blocks: _ocr.blocks.map((block) => ({
       ...block,
-      wordReadings: block.segmentation.flatMap<WordReadingForRender>(
+      wordReadings: block.segmentation!.flatMap<WordReadingForRender>(
         (wordChain, wordChainIdx) => {
           // Edge case when dictionary info available
           if (typeof wordChain === "string")

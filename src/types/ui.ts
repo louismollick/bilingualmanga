@@ -1,5 +1,5 @@
+import { type getPageOcr } from "@/server/db/dal/manga";
 import { type WordReading } from "./ichiran";
-import { type Block, type MokuroResponse } from "./mokuro";
 
 // Format after processing for render
 export type WordReadingForRender = WordReading & {
@@ -9,10 +9,13 @@ export type WordReadingForRender = WordReading & {
   isPunctuation: boolean; // Generated on render using regex
 };
 
-export type BlockForRender = Block & {
-  wordReadings: WordReadingForRender[];
-};
+export type GetPageOcrResponse = Awaited<ReturnType<typeof getPageOcr>>;
 
-export type MokuroResponseForRender = MokuroResponse & {
+export type BlockForRender =
+  NonNullable<GetPageOcrResponse>["blocks"][number] & {
+    wordReadings: WordReadingForRender[];
+  };
+
+export type GetPageOcrResponseForRender = GetPageOcrResponse & {
   blocks: BlockForRender[];
 };

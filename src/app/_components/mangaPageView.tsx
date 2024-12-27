@@ -22,7 +22,7 @@ import {
   type MangaPagePaths,
 } from "@/types/language";
 import { cn } from "@/lib/ui/utils";
-import { type MokuroResponseForRender } from "@/types/ui";
+import { type GetPageOcrResponseForRender } from "@/types/ui";
 import { ZOOM_PERCENTAGES_VH_STYLES } from "@/app/_components/navigationBar";
 
 const MangaPageView = ({
@@ -34,7 +34,7 @@ const MangaPageView = ({
   onAddWordToAnki,
   onCanAddWordsToAnki,
 }: MangaPageParams & {
-  ocr: MokuroResponseForRender;
+  ocr: GetPageOcrResponseForRender;
   paths: MangaPagePaths;
   onAddWordToAnki: (blockIdx: number, wordIdx: number) => Promise<void>;
   onCanAddWordsToAnki: (blockIdx: number) => Promise<boolean[]>;
@@ -78,44 +78,46 @@ const MangaPageView = ({
 
   const speechBubbles = useMemo(
     () =>
-      ocr.blocks.map(({ box, font_size, vertical, lines }, blockIdx) => {
-        // Find the ratio/percentages for positioning the speech bubbles
-        const left = `${(box[0] * 100) / ocr.img_width}%`;
-        const top = `${(box[1] * 100) / ocr.img_height}%`;
-        const width = `${((box[2] - box[0]) * 100) / ocr.img_width}%`;
-        const height = `${((box[3] - box[1]) * 100) / ocr.img_height}%`;
-        const fontSize = `${(font_size * zoomPercentage) / ocr.img_height}vh`;
+      ocr.blocks.map(
+        ({ box, fontSize: _fontSize, vertical, lines }, blockIdx) => {
+          // Find the ratio/percentages for positioning the speech bubbles
+          const left = `${(box[0] * 100) / ocr.imgWidth}%`;
+          const top = `${(box[1] * 100) / ocr.imgHeight}%`;
+          const width = `${((box[2] - box[0]) * 100) / ocr.imgWidth}%`;
+          const height = `${((box[3] - box[1]) * 100) / ocr.imgHeight}%`;
+          const fontSize = `${(parseFloat(_fontSize) * zoomPercentage) / ocr.imgHeight}vh`;
 
-        return (
-          <div
-            key={`block-${blockIdx}`}
-            className="group absolute border border-green-400"
-            // You can't use dynamic styles with Tailwind. So need to use inline style prop instead.
-            style={{
-              left,
-              top,
-              width,
-              height,
-              fontSize,
-              writingMode: vertical ? "vertical-rl" : "horizontal-tb",
-            }}
-            onClick={(e) => {
-              if (e.defaultPrevented) return;
-              e.preventDefault(); // Send message to parent components to not run their onClick handlers
-              setSelectedBlockIdx(blockIdx);
-            }}
-          >
-            {lines.map((line, lineIdx) => (
-              <p
-                key={`block-${blockIdx}-line-${lineIdx}`}
-                className="hidden cursor-text whitespace-nowrap group-hover:bg-black md:group-hover:inline-block"
-              >
-                {line}
-              </p>
-            ))}
-          </div>
-        );
-      }),
+          return (
+            <div
+              key={`block-${blockIdx}`}
+              className="group absolute border border-green-400"
+              // You can't use dynamic styles with Tailwind. So need to use inline style prop instead.
+              style={{
+                left,
+                top,
+                width,
+                height,
+                fontSize,
+                writingMode: vertical ? "vertical-rl" : "horizontal-tb",
+              }}
+              onClick={(e) => {
+                if (e.defaultPrevented) return;
+                e.preventDefault(); // Send message to parent components to not run their onClick handlers
+                setSelectedBlockIdx(blockIdx);
+              }}
+            >
+              {lines.map((line, lineIdx) => (
+                <p
+                  key={`block-${blockIdx}-line-${lineIdx}`}
+                  className="hidden cursor-text whitespace-nowrap group-hover:bg-black md:group-hover:inline-block"
+                >
+                  {line}
+                </p>
+              ))}
+            </div>
+          );
+        },
+      ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [zoomPercentage],
   );
@@ -131,8 +133,8 @@ const MangaPageView = ({
           <Image
             src={paths.imagePaths[language]}
             alt={`${mangaSlug} Volume ${volumeNumber} Page number ${pageNumber} Language ${language}`}
-            width={ocr.img_width}
-            height={ocr.img_height}
+            width={ocr.imgWidth}
+            height={ocr.imgHeight}
             priority
             className={cn(
               "h-auto min-w-full select-none md:w-auto",
