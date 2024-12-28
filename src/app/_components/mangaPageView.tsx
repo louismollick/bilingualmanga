@@ -22,7 +22,7 @@ import {
   type MangaPagePaths,
 } from "@/types/language";
 import { cn } from "@/lib/ui/utils";
-import { type GetPageOcrResponseForRender } from "@/types/ui";
+import { type GetPageOcrResultForRender } from "@/types/ui";
 import { ZOOM_PERCENTAGES_VH_STYLES } from "@/app/_components/navigationBar";
 
 const MangaPageView = ({
@@ -34,7 +34,7 @@ const MangaPageView = ({
   onAddWordToAnki,
   onCanAddWordsToAnki,
 }: MangaPageParams & {
-  ocr: GetPageOcrResponseForRender;
+  ocr: GetPageOcrResultForRender;
   paths: MangaPagePaths;
   onAddWordToAnki: (blockIdx: number, wordIdx: number) => Promise<void>;
   onCanAddWordsToAnki: (blockIdx: number) => Promise<boolean[]>;

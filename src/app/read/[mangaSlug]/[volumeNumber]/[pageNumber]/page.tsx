@@ -6,7 +6,7 @@ import {
   type MangaPageParams,
 } from "@/types/language";
 import {
-  type GetPageOcrResponseForRender,
+  type GetPageOcrResultForRender,
   type WordReadingForRender,
 } from "@/types/ui";
 import addWordToAnki from "@/lib/anki/addWordToAnki";
@@ -38,7 +38,7 @@ export default async function MangaPage({
   if (!_ocr) return <div>Page not found.</div>;
 
   // Convert the OCR response to a format that can be rendered
-  const ocr: GetPageOcrResponseForRender = {
+  const ocr: GetPageOcrResultForRender = {
     ..._ocr,
     blocks: _ocr.blocks.map((block) => ({
       ...block,
