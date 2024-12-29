@@ -7,10 +7,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/app/_components/ui/card";
-import { Button } from "@/app/_components/ui/button";
 import { cn } from "@/lib/ui/utils";
 import { type WordReadingForRender } from "@/types/ui";
-import AnkiIcon from "@/app/_components/ankiIcon";
 
 function WordGloss({
   gloss,
@@ -118,7 +116,7 @@ export default forwardRef<HTMLDivElement, Props>(function WordReadingCard(
         )}
         {sentence}
       </CardHeader>
-      <CardContent className="max-h-[250px] overflow-y-scroll text-sm">
+      <CardContent className="max-h-[250px] overflow-y-scroll text-base">
         <WordReadingContent wordReading={wordReading} showReading={false} />
       </CardContent>
     </Card>

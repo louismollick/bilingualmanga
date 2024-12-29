@@ -1,4 +1,5 @@
-import { type IchiranResponse, type WordReading } from "./ichiran";
+import { type kanjiDetail } from "@/server/db/schema/bilingualmanga";
+import { type IchiranResponse, type WordReading } from "@/types/ichiran";
 
 // Format after processing for render
 export type WordReadingForRender = WordReading & {
@@ -8,34 +9,7 @@ export type WordReadingForRender = WordReading & {
   isPunctuation: boolean; // Generated on render using regex
 };
 
-export type Reading = {
-  kana: string;
-  perc: number;
-  type: string;
-  num_words: number;
-};
-
-export type CommonWord = {
-  seq: number;
-  text: string;
-  kana: string;
-  common: number;
-  kanji: string;
-  wordnum: number;
-  gloss: string[];
-};
-
-export type Kanji = {
-  id: number;
-  text: string;
-  freq: number;
-  grade: number;
-  strokes: number;
-  stat_common: number;
-  readings: Reading[];
-  meanings: string[];
-  commonWords: CommonWord[];
-};
+export type Kanji = typeof kanjiDetail.$inferSelect;
 
 export type GetPageOcrResult = {
   imgWidth: number;

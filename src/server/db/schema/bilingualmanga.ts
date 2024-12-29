@@ -30,7 +30,8 @@ import {
   meaning,
   reading,
   sense,
-} from "./ichiran";
+} from "@/server/db/schema/ichiran";
+import { jsonAggBuildObject } from "@/server/db/utils";
 import { type IchiranResponse } from "@/types/ichiran";
 
 export const manga = pgTable("manga", {
@@ -129,19 +130,15 @@ export const kanjiDetail = pgMaterializedView("kanji_detail").as((qb) => {
     qb
       .select({
         id: kanji.id,
-        readings: sql<
+        readings: jsonAggBuildObject(
           {
-            kana: string;
-            type: string;
-            num_words: number;
-            perc: number;
-          }[]
-        >`json_agg(jsonb_build_object(
-              'kana', ${reading.text},
-              'type', ${reading.type},
-              'num_words', ${reading.statCommon},
-              'perc', (${reading.statCommon} * 100.0 / NULLIF(${kanji.statCommon}, 0))
-            ) ORDER BY ${reading.statCommon} DESC)`.as("readings"),
+            kana: reading.text,
+            type: reading.type,
+            numWords: reading.statCommon,
+            perc: sql<number>`(${reading.statCommon} * 100.0 / NULLIF(${kanji.statCommon}, 0))`,
+          },
+          { orderBy: { colName: reading.statCommon, direction: "DESC" } },
+        ).as("readings"),
       })
       .from(kanji)
       .innerJoin(reading, eq(kanji.id, reading.kanjiId))
@@ -211,10 +208,10 @@ export const kanjiDetail = pgMaterializedView("kanji_detail").as((qb) => {
         kana: commonWordsRaw.kana,
         common: commonWordsRaw.common,
         kanji: commonWordsRaw.kanji,
-        wordnum: sql<number>`row_number() OVER (
+        wordNum: sql<number>`row_number() OVER (
           PARTITION BY ${commonWordsRaw.kanji} 
           ORDER BY ${commonWordsRaw.common} = 0, ${commonWordsRaw.common}, ${commonWordsRaw.seq})`.as(
-          "wordnum",
+          "wordNum",
         ),
         gloss: sql<
           string[]
@@ -243,13 +240,13 @@ export const kanjiDetail = pgMaterializedView("kanji_detail").as((qb) => {
             kana: string;
             common: number;
             kanji: string;
-            wordnum: number;
+            wordNum: number;
             gloss: string[];
           }[]
         >`json_agg(${aggregatedCommonWords})`.as("commonWords"),
       })
       .from(aggregatedCommonWords)
-      .where(lte(aggregatedCommonWords.wordnum, 10))
+      .where(lte(aggregatedCommonWords.wordNum, 10))
       .groupBy(aggregatedCommonWords.kanji),
   );
 

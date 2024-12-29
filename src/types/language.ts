@@ -4,6 +4,13 @@ export const Language = {
 } as const;
 export type LanguageType = (typeof Language)[keyof typeof Language];
 
+export const SegmentationMode = {
+  words: "words",
+  kanjis: "kanjis",
+} as const;
+export type SegmentationModeType =
+  (typeof SegmentationMode)[keyof typeof SegmentationMode];
+
 export type MangaPageParams = {
   mangaSlug: string;
   volumeNumber: string;

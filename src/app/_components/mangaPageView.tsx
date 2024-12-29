@@ -11,19 +11,23 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/app/_components/ui/drawer";
+import { Tabs, TabsList, TabsTrigger } from "@/app/_components/ui/tabs";
 import AnkiButton from "@/app/_components/ankiButton";
 import WordReadingCard from "@/app/_components/wordReadingCard";
+import { ZOOM_PERCENTAGES_VH_STYLES } from "@/app/_components/navigationBar";
+import KanjiCard from "@/app/_components/kanjiCard";
 import useKeyPress from "@/app/_hooks/useKeyPress";
 import { useLanguage } from "@/app/_hooks/useLanguage";
 import { useZoomPercentage } from "@/app/_hooks/useZoomPercentage";
+import { cn } from "@/lib/ui/utils";
+import { type GetPageOcrResultForRender } from "@/types/ui";
 import {
   Language,
+  SegmentationMode,
+  type SegmentationModeType,
   type MangaPageParams,
   type MangaPagePaths,
 } from "@/types/language";
-import { cn } from "@/lib/ui/utils";
-import { type GetPageOcrResultForRender } from "@/types/ui";
-import { ZOOM_PERCENTAGES_VH_STYLES } from "@/app/_components/navigationBar";
 
 const MangaPageView = ({
   mangaSlug,
@@ -59,6 +63,8 @@ const MangaPageView = ({
 
   const [selectedBlockIdx, setSelectedBlockIdx] = useState<number | null>(null);
   const [selectedWordIdx, setSelectedWordIdx] = useState<number | null>(null);
+  const [segmentationMode, setSegmentationMode] =
+    useState<SegmentationModeType>(SegmentationMode.words);
   const { language } = useLanguage();
   const { zoomPercentage } = useZoomPercentage();
 
@@ -149,9 +155,13 @@ const MangaPageView = ({
         onClose={() => {
           setSelectedBlockIdx(null);
           setSelectedWordIdx(null);
+          setSegmentationMode(SegmentationMode.words);
         }}
       >
-        <DrawerContent className="h-[85vh]" aria-describedby={undefined}>
+        <DrawerContent
+          className="h-[80vh] lg:h-[95vh]"
+          aria-describedby={undefined}
+        >
           <DrawerHeader className="pb-0">
             <DrawerTitle>
               <p className="w-full select-text p-3 text-left text-4xl font-light text-muted-foreground lg:text-6xl">
@@ -175,37 +185,61 @@ const MangaPageView = ({
                 ))}
               </p>
             </DrawerTitle>
+            {ocr.blocks[selectedBlockIdx!]?.kanji?.length && (
+              <Tabs
+                onValueChange={(value) =>
+                  setSegmentationMode(value as SegmentationModeType)
+                }
+                defaultValue={SegmentationMode.words}
+                className="mx-auto"
+              >
+                <TabsList>
+                  <TabsTrigger value={SegmentationMode.words}>
+                    Words
+                  </TabsTrigger>
+                  <TabsTrigger value={SegmentationMode.kanjis}>
+                    Kanjis
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            )}
           </DrawerHeader>
           <div className="grid h-full grid-cols-1 gap-4 overflow-y-scroll p-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {wordReadings?.map((wordReading, wordIdx) =>
-              wordReading.isPunctuation ? null : (
-                <WordReadingCard
-                  key={`wordreading-${wordIdx}`}
-                  wordReading={wordReading}
-                  onClick={() => {
-                    scrollWordReadingIntoView(wordIdx);
-                    setSelectedWordIdx(wordIdx);
-                  }}
-                  ref={(node) => {
-                    if (node) wordRefs.current.set(wordIdx, node);
-                    else wordRefs.current.delete(wordIdx);
-                  }}
-                  className={cn(
-                    selectedWordIdx === wordIdx && "border-accent-foreground",
-                  )}
-                  ankiBtn={
-                    selectedBlockIdx !== null ? (
-                      <AnkiButton
-                        blockIdx={selectedBlockIdx}
-                        wordIdx={wordIdx}
-                        onAddWordToAnki={onAddWordToAnki}
-                        onCanAddWordsToAnki={onCanAddWordsToAnki}
-                      />
-                    ) : null
-                  }
-                />
-              ),
-            )}
+            {segmentationMode === SegmentationMode.words &&
+              wordReadings?.map((wordReading, wordIdx) =>
+                wordReading.isPunctuation ? null : (
+                  <WordReadingCard
+                    key={`wordreading-${wordIdx}`}
+                    wordReading={wordReading}
+                    onClick={() => {
+                      scrollWordReadingIntoView(wordIdx);
+                      setSelectedWordIdx(wordIdx);
+                    }}
+                    ref={(node) => {
+                      if (node) wordRefs.current.set(wordIdx, node);
+                      else wordRefs.current.delete(wordIdx);
+                    }}
+                    className={cn(
+                      selectedWordIdx === wordIdx && "border-accent-foreground",
+                    )}
+                    ankiBtn={
+                      selectedBlockIdx !== null ? (
+                        <AnkiButton
+                          blockIdx={selectedBlockIdx}
+                          wordIdx={wordIdx}
+                          onAddWordToAnki={onAddWordToAnki}
+                          onCanAddWordsToAnki={onCanAddWordsToAnki}
+                        />
+                      ) : null
+                    }
+                  />
+                ),
+              )}
+            {segmentationMode === SegmentationMode.kanjis &&
+              selectedBlockIdx !== null &&
+              ocr.blocks[selectedBlockIdx]?.kanji?.map((kanji, kanjiIdx) => (
+                <KanjiCard key={`kanji-${kanjiIdx}`} kanji={kanji} />
+              ))}
           </div>
         </DrawerContent>
       </Drawer>
