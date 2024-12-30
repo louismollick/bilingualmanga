@@ -60,10 +60,13 @@ export const getPageOcr = async (
       )
     ),
     speech_bubble_kanji as (
-      select speech_bubbles.id, json_agg("kanji_detail") as kanji
+      select 
+          speech_bubbles.id, 
+          json_agg(kanji_detail order by kanji_elements.ordinality) as kanji
       from speech_bubbles
-      cross join lateral jsonb_array_elements_text(speech_bubbles.kanji) AS kanji_element
-      inner join "kanji_detail" on kanji_element.value = "kanji_detail"."text"
+      cross join lateral jsonb_array_elements_text(speech_bubbles.kanji) 
+      with ordinality as kanji_elements(value, ordinality)
+      inner join kanji_detail on kanji_elements.value = kanji_detail.text
       group by speech_bubbles.id
     )
     select 
