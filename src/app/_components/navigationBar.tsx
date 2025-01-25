@@ -37,7 +37,7 @@ const PERCENTAGES_TO_SHOW = [DEFAULT_ZOOM_PERCENTAGE, MAX_PERCENTAGE].map(
   String,
 );
 
-export default function NavigationBar() {
+export default function NavigationBar({ totalPages }: { totalPages: number }) {
   const { mangaSlug, volumeNumber, pageNumber } = useParams<MangaPageParams>();
   const { setLanguage } = useLanguage();
   const { zoomPercentage, setZoomPercentage } = useZoomPercentage();
@@ -73,7 +73,9 @@ export default function NavigationBar() {
 
       <div className="flex flex-col items-center justify-center md:h-20 md:w-20">
         <p>Page</p>
-        <p>{pageNumber}</p>
+        <p>
+          {pageNumber}/{totalPages}
+        </p>
       </div>
 
       <Tabs

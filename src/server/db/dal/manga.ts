@@ -1,10 +1,31 @@
 "server-only";
 
 import { db } from "@/server/db";
-import { sql } from "drizzle-orm";
+import { and, eq, max, sql } from "drizzle-orm";
 import { type GetPageOcrResult } from "@/types/ui";
+import { manga, mangaPage } from "../schema/bilingualmanga";
 
 export const getManga = () => db.query.manga.findMany();
+
+export const getVolumeTotalPages = async (mangaSlug: string, volumeNumber: number) => {
+  const result = await db
+    .select({ value: max(mangaPage.pageNum) })
+    .from(mangaPage)
+    .innerJoin(manga, eq(manga.id, mangaPage.mangaId))
+    .where(
+      and(eq(manga.slug, mangaSlug), eq(mangaPage.volumeNum, volumeNumber)),
+    );
+
+  const totalPages = result[0]?.value;
+
+  if (!totalPages) {
+    const message = `Could not getVolumeTotalPages for manga=${mangaSlug} volume=${volumeNumber}`;
+    throw new Error(message);
+  }
+
+  return totalPages;
+}
+
 
 export const getPageOcr = async (
   mangaSlug: string,
@@ -109,8 +130,6 @@ export const getPageOcr = async (
   const result = query.rows;
 
   if (!result.length) return null;
-
-  console.log(`getPageOcr: ${JSON.stringify(result)}`);
 
   return result[0];
 };
